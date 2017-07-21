@@ -1,0 +1,3 @@
+PROBLEMAS:
+- problemas com a checagem dos tipos: return (analyze.c).
+- 
