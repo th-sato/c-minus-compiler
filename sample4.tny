@@ -14,12 +14,25 @@ int gdc (int u, int v)
    /* u-u / v*v == u mod v */
 }
 
-int input(void){
-    int a;
-    return a;
-}
-
-void output(void){
+int fibonacci(int n){
+    int c;
+    int next;
+    int first;
+    int second;
+    first = 0;
+    second = 1;
+    c = 0;
+    while(c <= n){
+        if(c <= 1)
+            next = c;
+        else{
+            next = first + second;
+            first = second;
+            second = next; /* Estava second = first */
+        }
+        c = c + 1;
+    }
+    return next;
 }
 
 void main(void)
@@ -29,4 +42,5 @@ void main(void)
    x = input();
    y = input();
    output(gdc(x,y));
+   output(fibonacci(x));
 }

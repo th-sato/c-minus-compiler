@@ -1,38 +1,17 @@
 #include "code.h"
 
-static RegisterS regS;
+static int nextToBeReplacedRegS;
 static int memoryInstruction = 0; //Posição memória de instruções
 static BucketList functionActual = NULL;
 
 static void initializeRegisterS(){
-  int i;
-  for(i=0; i<size_registerS; i++){
-    regS.vector[i].used = false;
-    regS.vector[i].savedVariable = NULL;
-  }
-  regS.nextToBeReplaced = 0;
+  nextToBeReplacedRegS = 0;
 }
 
-static RegisterSElement createElementRegisterS(BucketList savedVariable){
-  RegisterSElement rse;
-  rse.used = true;
-  rse.savedVariable = savedVariable;
-  return rse;
-}
-
-static int checkRegisterS(BucketList b){
-  int i;
-  for(i=0; i<size_registerS; i++){
-    if(regS.vector[i].savedVariable == b) return i;
-  }
-  return -1;
-}
-
-static int useRegisterS (BucketList b){
-  int pos = regS.nextToBeReplaced;
-  regS.vector[pos] = createElementRegisterS (b);
-  if(regS.nextToBeReplaced < size_registerS-1) regS.nextToBeReplaced++;
-  else regS.nextToBeReplaced = 0;
+static int useRegisterS(){
+  int pos = nextToBeReplacedRegS;
+  if(nextToBeReplacedRegS < size_registerS - 1) nextToBeReplacedRegS++;
+  else nextToBeReplacedRegS = 0;
   return pos;
 }
 
@@ -196,17 +175,13 @@ static bool isItParameter(char* paramToCompare){
 }
 
 static int checkBucketL (AddressQuadElement instructionM, BucketList b){
-  int pos = checkRegisterS(b);
-  if(pos == -1){ //Não está no banco de registradores
-    pos = useRegisterS(b);
-    pos += registerSBR;
-    if(b->vector){
-      if(isItParameter(b->name)) loadWord(instructionM, pos, b->memloc);
-      else loadi(instructionM, pos, b->memloc);
-    }
-    else loadWord(instructionM, pos, b->memloc);
+  int pos = useRegisterS(b);
+  pos += registerSBR;
+  if(b->vector){
+    if(isItParameter(b->name)) loadWord(instructionM, pos, b->memloc);
+    else loadi(instructionM, pos, b->memloc);
   }
-  else pos += registerSBR;
+  else loadWord(instructionM, pos, b->memloc);
   return pos;
 }
 
@@ -284,7 +259,7 @@ static Operating assignValue (AddressQuadElement instructionM, AddressData ad){ 
   }
 }
 
-//Retornar posição do registrador com o seu endereço
+//Retornar posição da memória ou do registrador que contém o endereço
 static int assignResult (AddressQuadElement instructionM, AddressData ad){ //Endereço
   switch (ad->addressKind) {
     case BucketL:
@@ -301,19 +276,14 @@ static int assignResult (AddressQuadElement instructionM, AddressData ad){ //End
 static void assignInstruction(AddressQuadElement element){
   int addr = assignResult(element, element->result); //Posição na memória
   Operating value = assignValue(element, element->addr1);
-  int pos = checkRegisterS(element->result->addr.bPointer);
   switch (element->result->addressKind) {
     case BucketL:
       switch (value->type) {
         case regT:
           storeWord(element, value->op, addr);
-          if(pos!=-1 && element->result->addressKind == BucketL)
-            assignReg(element, registerSBR + pos, value->op);
           break;
         case immediateT:
           storeI(element, value->op, addr);
-          if(pos!=-1 && element->result->addressKind == BucketL)
-            loadi(element, registerSBR + pos, value->op);
           break;
         default:
           break;
@@ -348,7 +318,7 @@ static int searchFunction (AddressQuad code, BucketList b){
   }
 }
 
-static BucketList foundFirstCall (AddressQuadElement instructionM){
+static BucketList foundCall (AddressQuadElement instructionM){
   AddressQuadElement aux = instructionM;
   while(aux!=NULL){
     if(aux->op == CallOP)
@@ -374,14 +344,6 @@ static void writeParamInMemory(AddressQuadElement instructionM, int location){
       break;
     default:
       break;
-  }
-}
-
-static void saveParametersRegisterS(BucketList function, AddressQuadElement element){
-  List paramList = function->param->list;
-  while(paramList != NULL){
-    loadWord(element, registerSBR + useRegisterS(st_lookup(paramList->name, function->name)), paramList->location);
-    paramList = paramList->next;
   }
 }
 
@@ -421,7 +383,7 @@ static int changeJump(AddressQuad code, int nNext){
 
 static void changeJumpCall(AddressQuad code, AddressQuadElement element){
   Assembly aux = element->objectCode;
-  while(aux != NULL && aux->ao != jAO) //ARRUMAR
+  while(aux != NULL && aux->ao != jAO)
     aux = aux->next;
   aux->result->op = changeJump(code, aux->result->op);
 }
@@ -511,8 +473,8 @@ void print_assembly (AddressQuad code){
   AddressQuadElement aux = code->first;
   Assembly aux2;
   while(aux!=NULL){
-    //fprintf(listing, "\n");
-    //print_address_quad_element(aux);
+    fprintf(listing, "\n");
+    print_address_quad_element(aux);
     aux2 = aux->objectCode;
     while(aux2!=NULL){
       fprintf(listing, "[%d] ", aux2->memlocI);
@@ -646,7 +608,6 @@ void codeGenerationAssembly(AddressQuad code, FILE * codefile){
       case FunctionOP: //OK
         functionActual = element->addr1->addr.bPointer;
         initializeRegisterS();
-        saveParametersRegisterS(functionActual, element);
         break;
       case EndFunctionOP: //OK
         exitFunction(element);
@@ -681,7 +642,7 @@ void codeGenerationAssembly(AddressQuad code, FILE * codefile){
         break;
       case ParamOP: //OK
         if(functionCall == NULL){
-          functionCall = foundFirstCall(element);
+          functionCall = foundCall(element);
           paramList = functionCall->param->list;
         }
         if(paramList == NULL){

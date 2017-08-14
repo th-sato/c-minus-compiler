@@ -22,16 +22,6 @@
 
 #define sizeMI 100
 
-typedef struct RegisterSElement
-  { bool used;
-    BucketList savedVariable;
-  } RegisterSElement;
-
-typedef struct RegisterS
-  { struct RegisterSElement vector[size_registerS];
-    int nextToBeReplaced; //Próximo a ser substituído
-  } RegisterS;
-
 void codeGenerationAssembly(AddressQuad code, FILE * codefile);
 
 #endif
