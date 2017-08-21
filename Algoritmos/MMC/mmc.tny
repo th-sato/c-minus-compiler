@@ -1,0 +1,32 @@
+int resto(int a, int b){
+    int c;
+    c = a/b;
+    return (a-b*c);
+}
+
+int mdc(int a, int b){
+   int r;
+   while (b != 0){
+       r = resto(a, b);
+       a = b;
+       b = r;
+    }
+   return a;
+}
+
+
+int mmc(int a, int b){
+    int c;
+    c = (a*b);
+    c = c/mdc(a,b);
+    return c;
+}
+
+void main(void){
+    int numUM;
+    int numDOIS;
+    numUM = 10;
+    numDOIS = input();
+    output(mmc(numUM, numDOIS));
+}
+

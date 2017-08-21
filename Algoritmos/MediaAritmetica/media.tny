@@ -1,0 +1,21 @@
+int media (int v[], int tam){
+    int soma;
+    int aux;
+    aux = 0;
+    soma = 0;
+    while(aux < tam){
+        soma = soma + v[aux];
+        aux = aux + 1;
+    }
+    return soma/tam;
+}
+void main(void){
+    int v[5];
+    v[0] = 0;
+    v[1] = 1;
+    v[2] = 2;
+    v[3] = 3;
+    v[4] = input();
+    output(media(v, 5));
+}
+

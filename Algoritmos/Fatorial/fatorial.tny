@@ -1,0 +1,18 @@
+int fatorial (int num){
+    int cont;
+    int resultado;
+    cont = 1;
+    resultado = 1;
+    while(cont <= num){
+        resultado = resultado * cont;
+        cont = cont + 1;
+    }
+    return resultado;
+}
+
+void main(void){
+    int n;
+    n = input();
+    output(fatorial(n));
+}
+

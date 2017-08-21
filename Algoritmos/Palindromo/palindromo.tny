@@ -1,0 +1,39 @@
+int resto(int a, int b){
+    int c;
+    c = a/b;
+    return (a-b*c);
+}
+
+int preencherVetor(int vetor[], int num){
+    int cont;
+    cont = 0;
+    while(num > 0){
+        vetor[cont] = resto(num, 10);
+        num = num/10;
+        cont = cont + 1;
+    }
+    return cont;
+}
+
+int palindromo (int num){
+    int vetor[5]; /*Máximo 5 digitos*/
+    int i;
+    int tam;
+    int ehPalindromo;
+    i = 0;
+    ehPalindromo = 1;
+    tam = preencherVetor(vetor, num);
+    while(i < tam){
+        if(vetor[i] != vetor[tam-1-i])
+            ehPalindromo = 0;
+        i = i + 1;
+    }
+    return ehPalindromo;
+}
+
+void main(void){
+    int n;
+    n = input();
+    output(palindromo(n));
+}
+

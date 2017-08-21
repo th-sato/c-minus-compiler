@@ -1,0 +1,18 @@
+int potencia (int num, int expoente){
+    int cont;
+    int resultado;
+    cont = 0;
+    resultado = 1;
+    while(cont < expoente){
+        resultado = resultado * num;
+        cont = cont + 1;
+    }
+    return resultado;
+}
+
+void main(void){
+    int n;
+    n = input();
+    output(potencia(n,2));
+}
+
