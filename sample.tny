@@ -1,25 +1,19 @@
-int fibonacci(int n){
-    int c;
-    int next;
-    int first;
-    int second;
-    first = 0;
-    second = 1;
-    c = 0;
-    while(c <= n){
-        if(c <= 1)
-            next = c;
-        else{
-            next = first + second;
-            first = second;
-            second = next; /* Estava second = first */
-        }
-        c = c + 1;
+int potencia (int num, int expoente){
+    int cont;
+    int resultado;
+    cont = 0;
+    resultado = 1;
+    while(cont < expoente){
+        resultado = resultado * num;
+        cont = cont + 1;
     }
-    return next;
+    return resultado;
 }
+
 void main(void){
-  int n;
-  n = input();
-  output(fibonacci(n));
+    int n;
+    int m;
+    n = 3;
+    m = 4;
+    output(potencia(n,m));
 }

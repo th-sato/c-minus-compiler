@@ -514,27 +514,6 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
     case subiAO:
       print_arithmetic_operations(codefile, 3, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
-    case multAO:
-      print_arithmetic_operations(codefile, 17, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
-      break;
-    case divAO:
-      print_arithmetic_operations(codefile, 18, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
-      break;
-    case lwAO:
-      fprintf(codefile, "6'd1, 5'd%d, 1'bx, 20'd%d", assemblyPrint->result->op, assemblyPrint->op1->op);
-      break;
-    case lrAO:
-      fprintf(codefile, "6'd16, 5'd%d, 5'd%d, 16'd0", assemblyPrint->result->op, assemblyPrint->op1->op);
-      break;
-    case loadiAO:
-      fprintf(codefile, "6'd2, 5'd%d, 21'd%d", assemblyPrint->result->op, assemblyPrint->op1->op);
-      break;
-    case swAO:
-      fprintf(codefile, "6'd3, 5'd%d, 1'bx, 20'd%d", assemblyPrint->result->op, assemblyPrint->op1->op);
-      break;
-    case swrAO:
-      fprintf(codefile, "6'd17, 5'd%d, 5'd%d, 16'd0", assemblyPrint->result->op, assemblyPrint->op1->op);
-      break;
     case sltAO:
       print_arithmetic_operations(codefile, 11, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
@@ -553,6 +532,27 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
     case neqAO:
       print_arithmetic_operations(codefile, 16, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
+    case multAO:
+      print_arithmetic_operations(codefile, 17, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      break;
+    case divAO:
+      print_arithmetic_operations(codefile, 18, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      break;
+    case lwAO:
+      fprintf(codefile, "6'd1, 5'd%d, 1'bx, 20'd%d", assemblyPrint->result->op, assemblyPrint->op1->op);
+      break;
+    case loadiAO:
+      fprintf(codefile, "6'd2, 5'd%d, 21'd%d", assemblyPrint->result->op, assemblyPrint->op1->op);
+      break;
+    case lrAO:
+      fprintf(codefile, "6'd3, 5'd%d, 5'd%d, 16'd0", assemblyPrint->result->op, assemblyPrint->op1->op);
+      break;
+    case swAO:
+      fprintf(codefile, "6'd4, 5'd%d, 1'bx, 20'd%d", assemblyPrint->result->op, assemblyPrint->op1->op);
+      break;
+    case swrAO:
+      fprintf(codefile, "6'd5, 5'd%d, 5'd%d, 16'd0", assemblyPrint->result->op, assemblyPrint->op1->op);
+      break;
     case beqAO:
       fprintf(codefile, "6'd6, 5'd%d, 5'd%d, 16'd%d", assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
@@ -566,16 +566,16 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
       fprintf(codefile, "6'd9, 5'd%d, 21'd0", assemblyPrint->result->op);
       break;
     case nopAO:
-      fprintf(codefile, "6'd11, 26'd0");
+      fprintf(codefile, "6'd10, 26'd0");
       break;
     case hltAO:
-      fprintf(codefile, "6'd12, 5'd%d, 21'd0", registerINOUT);
+      fprintf(codefile, "6'd11, 5'd%d, 21'd0", registerINOUT);
       break;
     case inAO:
-      fprintf(codefile, "6'd14, 5'd%d, 21'd0", assemblyPrint->result->op);
+      fprintf(codefile, "6'd12, 5'd%d, 21'd0", assemblyPrint->result->op);
       break;
     case outAO:
-      fprintf(codefile, "6'd15, 5'd%d, 21'd0", assemblyPrint->result->op);
+      fprintf(codefile, "6'd13, 5'd%d, 21'd0", assemblyPrint->result->op);
       break;
     default:
       fprintf(listing, "Error");
