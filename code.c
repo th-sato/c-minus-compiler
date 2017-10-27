@@ -118,6 +118,7 @@ static void in_instruction(AddressQuadElement instruction){
 }
 
 static void out_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(delayAO, NULL, NULL, NULL));
   addAssemblyElement(instruction, createElement(outAO, regOperating(registerINOUT), NULL, NULL));
 }
 
@@ -447,6 +448,7 @@ void print_assembly_operation(AssemblyOperation a){
     case moveAO: fprintf(listing, "move"); break;
     case inAO: fprintf(listing, "in"); break;
     case outAO: fprintf(listing, "out"); break;
+    case delayAO: fprintf(listing, "delay"); break;
     default: break;
   }
 }
@@ -576,6 +578,9 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
       break;
     case outAO:
       fprintf(codefile, "6'd13, 5'd%d, 21'd0", assemblyPrint->result->op);
+      break;
+    case delayAO:
+      fprintf(codefile, "6'd14, 26'dx");
       break;
     default:
       fprintf(listing, "Error");
