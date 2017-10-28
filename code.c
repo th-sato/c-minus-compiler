@@ -141,20 +141,20 @@ static void restoreTempBankR(AddressQuadElement instruction){ //ARRUMAR
 }
 
 static void instructionMult(AddressQuadElement element, Operating result, Operating op1, Operating op2){ //Somente valores positivos
-  /*int ret;
+  int ret;
   loadi(element, registerMD1, 0); //Contador
   loadi(element, registerMD2, 0); //Resultado
   ret = memoryInstruction;
   addAssemblyElement(element, createElement(sumAO, regOperating(registerMD2), regOperating(registerMD2), op1));
   addAssemblyElement(element, createElement(sumiAO, regOperating(registerMD1), regOperating(registerMD1), immediateOperating(1)));
   addAssemblyElement(element, createElement(bnqAO, regOperating(registerMD1), op2, addrITOperating(ret)));
-  assignReg(element, result->op, registerMD2);*/
-  addAssemblyElement(element, createElement(multAO, result, op1, op2));
+  assignReg(element, result->op, registerMD2);
+  //addAssemblyElement(element, createElement(multAO, result, op1, op2));
 }
 
 static void instructionDiv(AddressQuadElement element, Operating result, Operating op1, Operating op2){ //Somente valores positivos
-  /*int ret;
-  loadi(element, registerMD1, 0); //
+  int ret;
+  loadi(element, registerMD1, 0);
   loadi(element, registerMD2, 0); //Resultado
   ret = memoryInstruction;
   addAssemblyElement(element, createElement(sumAO, regOperating(registerMD1), regOperating(registerMD1), op2));
@@ -162,9 +162,8 @@ static void instructionDiv(AddressQuadElement element, Operating result, Operati
   addAssemblyElement(element, createElement(sltAO, regOperating(registerMDR),regOperating(registerMD1), op1));
   addAssemblyElement(element, createElement(bnqAO, regOperating(registerMDR), regOperating(registerZero), addrITOperating(ret)));
   addAssemblyElement(element, createElement(subiAO, regOperating(registerMD2), regOperating(registerMD2), immediateOperating(1)));
-  assignReg(element, result->op, registerMD2);*/
-  addAssemblyElement(element, createElement(divAO, result, op1, op2));
-
+  assignReg(element, result->op, registerMD2);
+  //addAssemblyElement(element, createElement(divAO, result, op1, op2));
 }
 
 static bool isItParameter(char* paramToCompare){
@@ -517,7 +516,7 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
       print_arithmetic_operations(codefile, 2, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
     case subiAO:
-      print_arithmetic_operations(codefile, 3, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      print_arithmetic_operations_immediate(codefile, 3, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
     case sltAO:
       print_arithmetic_operations(codefile, 11, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);

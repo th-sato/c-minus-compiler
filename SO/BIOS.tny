@@ -2,47 +2,45 @@
 
 int ERRO; /* Considera inicialmente que há erro */
 
-void saida(int n){
+/* void saida(int n){
   int cont;
   cont = 0;
   while(cont != 150){
     cont = cont +1;
     output(n);
   }
-}
+} */
 
 void confirmacao(){
   int conf;
   conf = input();
   if(conf == 1){
-    saida(100);
+    output(123);
     ERRO = 0;
   }
-  else
-    saida(0);
 }
 
 void displaySETEsegmentos(){ /* Apresentar um valor no display de 7 segmentos */
-  saida(3);
+  output(3);
   confirmacao();
 }
 
 void entrada(){ /* Apresentar valor de entrada */
   int n;
   n = input();
-  saida(n);
+  output(n);
   confirmacao();
 }
 
 void memoriaDeDados(){ /* Apresentar valor da memória de dados */
   int n;
   n = 4;
-  saida(n);
+  output(n);
   confirmacao();
 }
 
 void processador(){ /* Apresentar resultado da soma*/
-  saida(3+5);
+  output(3+5);
   confirmacao();
 }
 
