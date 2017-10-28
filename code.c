@@ -115,11 +115,13 @@ static void if_instruction(AddressQuadElement instruction){
 
 static void in_instruction(AddressQuadElement instruction){
   addAssemblyElement(instruction, createElement(inAO, regOperating(registerINOUT), NULL, NULL));
+  addAssemblyElement(instruction, createElement(delayNotOutAO, NULL, NULL, NULL));
 }
 
 static void out_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(delayAO, NULL, NULL, NULL));
   addAssemblyElement(instruction, createElement(outAO, regOperating(registerINOUT), NULL, NULL));
+  addAssemblyElement(instruction, createElement(delayOutAO, regOperating(registerINOUT), NULL, NULL));
+  addAssemblyElement(instruction, createElement(delayNotOutAO, NULL, NULL, NULL));
 }
 
 static void saveTempMemory(AddressQuadElement instruction){ //ARRUMAR
@@ -448,7 +450,8 @@ void print_assembly_operation(AssemblyOperation a){
     case moveAO: fprintf(listing, "move"); break;
     case inAO: fprintf(listing, "in"); break;
     case outAO: fprintf(listing, "out"); break;
-    case delayAO: fprintf(listing, "delay"); break;
+    case delayOutAO: fprintf(listing, "delay out"); break;
+    case delayNotOutAO: fprintf(listing, "delay not out"); break;
     default: break;
   }
 }
@@ -579,8 +582,11 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
     case outAO:
       fprintf(codefile, "6'd13, 5'd%d, 21'd0", assemblyPrint->result->op);
       break;
-    case delayAO:
-      fprintf(codefile, "6'd14, 26'dx");
+    case delayOutAO:
+      fprintf(codefile, "6'd14, 5'd%d, 5'd0, 10'd450, 6'd0", assemblyPrint->result->op);
+      break;
+    case delayNotOutAO:
+      fprintf(codefile, "6'd15, 10'd0, 10'd450, 6'd0");
       break;
     default:
       fprintf(listing, "Error");
@@ -594,7 +600,7 @@ void print_objectCode(AddressQuad code, FILE * codefile){
   while(aux!=NULL){
     aux2 = aux->objectCode;
     while(aux2!=NULL){
-      fprintf(codefile, "instructionM[%d] = {", aux2->memlocI);
+      fprintf(codefile, "instructionM[%d] <= {", aux2->memlocI);
       print_instruction(aux2, codefile);
       fprintf(codefile, "};\n");
       aux2 = aux2->next;

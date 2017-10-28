@@ -15,11 +15,9 @@ void confirmacao(){
   int conf;
   conf = input();
   if(conf == 1){
-    output(100);
+    output(123);
     ERRO = 0;
   }
-  else
-    output(0);
 }
 
 void displaySETEsegmentos(){ /* Apresentar um valor no display de 7 segmentos */
