@@ -42,6 +42,7 @@ typedef struct BucketListRec
     struct BucketListRec * next;
   } * BucketList;
 
+void resetBucketList();
 
 void st_insert_line(BucketList l, int lineno);
 

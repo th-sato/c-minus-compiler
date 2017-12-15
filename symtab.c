@@ -24,6 +24,14 @@ static int hash ( char * key )
 /* the hash table */
 static BucketList hashTable[SIZE];
 
+void resetBucketList(){
+  int i;
+  BucketList aux, aux2; //arrumar
+  for (i = 0; i < SIZE; i++) {
+    hashTable[i] = NULL;
+  }
+}
+
 /* found in table, so just add line number */
 void st_insert_line(BucketList l, int lineno) {
     LineList t = l->lines;

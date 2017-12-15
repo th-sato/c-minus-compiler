@@ -1,16 +1,29 @@
-instructionM[0] <= {6'd8, 6'bxxxxxx, 20'd1};
-instructionM[1] <= {6'd2, 5'd21, 21'd10};
-instructionM[2] <= {6'd2, 5'd22, 21'd3};
-instructionM[3] <= {6'd2, 5'd27, 21'd0};
-instructionM[4] <= {6'd2, 5'd28, 21'd0};
-instructionM[5] <= {6'd0, 5'd27, 5'd27, 5'd22, 5'bxxxxx, 6'd0};
-instructionM[6] <= {6'd0, 5'd28, 5'd28, 10'd1, 6'd1};
-instructionM[7] <= {6'd0, 5'd26, 5'd27, 5'd21, 5'bxxxxx, 6'd11};
-instructionM[8] <= {6'd7, 5'd26, 5'd0, 16'd5};
-instructionM[9] <= {6'd0, 5'd28, 5'd28, 10'd1, 6'd3};
-instructionM[10] <= {6'd0, 5'd1, 5'd28, 10'd0, 6'd1};
-instructionM[11] <= {6'd0, 5'd29, 5'd1, 10'd0, 6'd1};
-instructionM[12] <= {6'd13, 5'd29, 21'd0};
-instructionM[13] <= {6'd14, 5'd29, 5'd0, 10'd450, 6'd0};
-instructionM[14] <= {6'd15, 10'd0, 10'd450, 6'd0};
-instructionM[15] <= {6'd11, 5'd29, 21'd0};
+/*
+  Testar as seguintes funções:
+  * HDtoMI: OK
+  * RFtoHD: OK
+  * HDtoRF: OK
+  * HDtoMD: OK
+  * dataToHD: OK
+  * setMultiprogramming:
+  * setAddrContextSwitch:
+  * setQuantum:
+  * getPCProcess:
+  * executeProcess:
+  * setProcess:
+*/
+
+void teste(){
+  int a;
+  a = 4;
+}
+
+void main(void){
+  int a; int b; int c;
+  a = a + b + c;
+  b = a + c;
+  a = HDtoMD(3, 4);
+  setProcess(a);
+  returnMain();
+  teste();
+}

@@ -24,4 +24,3 @@ void main(void){
     x = input();
     output(buscaBinaria(vetor, 5, x));
 }
-

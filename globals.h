@@ -54,7 +54,6 @@ typedef int TokenType;
 //http://mtm.ufsc.br/~azeredo/cursoC/aulas/ca20.html
 extern FILE* source; /* source code text file */
 extern FILE* listing; /* listing output text file */
-extern FILE* code; /* code text file for TM simulator */
 
 extern int lineno; /* source line number for listing */
 
@@ -87,6 +86,23 @@ typedef struct treeNode
      struct { TokenType op; int val; char *name; char *scope; bool vector; int temp;} attr;
      TypeKind type; /* for type checking of exps */
    } TreeNode;
+
+
+typedef struct program
+  { int usage;
+    int name;
+    int inicio;
+    int tamMI;
+    int tamMD;
+    struct program * next;
+  } *Program;
+
+typedef struct FAT
+  { int qtd_prog;
+    int tam_prog;
+    int prox_pos;
+    struct program * p;
+  } FAT;
 
 /**************************************************/
 /***********   Flags for tracing       ************/
@@ -122,4 +138,11 @@ extern int TraceCode;
 
 /* Error = TRUE prevents further passes if an error occurs */
 extern int Error;
+
+extern int BIOS;
+extern int SO;
+extern int posSector;
+extern int locationMD;
+extern FAT fat;
+
 #endif

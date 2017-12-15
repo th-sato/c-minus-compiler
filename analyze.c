@@ -8,8 +8,12 @@ http://mtm.ufsc.br/~azeredo/cursoC/aulas/ca20.html */
 
 static BucketList pointer;
 static char *scope;
-static bool main_declared = false;
-static int location = 0;
+static bool main_declared;
+static int location;
+
+int getLocation(){
+  return location;
+}
 
 /* Procedure traverse is a generic recursive
  * syntax tree traversal routine:
@@ -56,6 +60,33 @@ static void mainError( char * message)
  * identifiers stored in t into
  * the symbol table
  */
+
+static void initializeBucketList(){
+  resetBucketList();
+  main_declared = false;
+  location = 0;
+}
+
+static void insertionOfProcessorFunctions(){
+  //IN OUT
+  st_insert("input", false, "Global", Function, Integer, -1, -1);
+  st_insert("output", false, "Global", Function, Void, -1, -1);
+  //HD
+  st_insert("HDtoMI", false, "Global", Function, Void, -1, -1);
+  st_insert("HDtoRF", false, "Global", Function, Void, -1, -1);
+  st_insert("RFtoHD", false, "Global", Function, Void, -1, -1);
+  st_insert("HDtoMD", false, "Global", Function, Integer, -1, -1);
+  st_insert("dataToHD", false, "Global", Function, Void, -1, -1);
+  //Context Switch
+  st_insert("returnMain", false, "Global", Function, Void, -1, -1);
+  st_insert("setMultiprogramming", false, "Global", Function, Void, -1, -1);
+  st_insert("setAddrContextSwitch", false, "Global", Function, Void, -1, -1);
+  st_insert("executeProcess", false, "Global", Function, Void, -1, -1);
+  st_insert("setQuantum", false, "Global", Function, Integer, -1, -1);
+  st_insert("getPCProcess", false, "Global", Function, Integer, -1, -1);
+  st_insert("setProcess", false, "Global", Function, Void, -1, -1);
+}
+
 static void insertNode( TreeNode * t) //Preencher tabela de símbolos
 { switch (t->nodekind) {
   case StmtK:
@@ -71,17 +102,7 @@ static void insertNode( TreeNode * t) //Preencher tabela de símbolos
           st_insert_line(pointer, t->lineno);
           t->type = pointer->typeData;
         }
-        else{ //A função não foi declarada
-          if(strcmp(t->attr.name, "input")==0){
-            t->type = Integer;
-            st_insert("input", false, "Global", Function, Integer, -1, location++);
-          }
-          else if (strcmp(t->attr.name, "output")==0){
-            t->type = Void;
-            st_insert("output", false, "Global", Function, Void, -1, location++);
-          }
-          else declareError(t, "Undeclared function!");
-        }
+        else declareError(t, "Undeclared function!");
         break;
       case ReturnK:
         break;
@@ -127,9 +148,9 @@ static void insertNode( TreeNode * t) //Preencher tabela de símbolos
         if(t->attr.scope==NULL) t->attr.scope = scope;
         pointer = st_lookup(t->attr.name, t->attr.scope);
         if(pointer == NULL){ //variável não declarada
-              st_insert(t->attr.name, t->attr.vector, t->attr.scope, Variable, t->type, t->lineno, location);
-              if(t->attr.vector) location += t->attr.val;
-              else location++;
+          st_insert(t->attr.name, t->attr.vector, t->attr.scope, Variable, t->type, t->lineno, location);
+          if(t->attr.vector) location += t->attr.val;
+          else location++;
         } else //variável declarada
           declareError(t, "Variable already declared!");
         break;
@@ -166,10 +187,12 @@ static void insertNode( TreeNode * t) //Preencher tabela de símbolos
 /* Function buildSymtab constructs the symbol
  * table by preorder traversal of the syntax tree
  */
-void buildSymtab(TreeNode * syntaxTree)
-{ traverse(syntaxTree,insertNode,nullProc);
-  if (TraceAnalyze)
-  { if(!main_declared)
+void buildSymtab(TreeNode * syntaxTree){
+  initializeBucketList();
+  insertionOfProcessorFunctions();
+  traverse(syntaxTree,insertNode,nullProc);
+  if (TraceAnalyze){
+    if(!main_declared)
       mainError("Main not declared!");
     fprintf(listing,"\nSymbol table:\n\n");
     printSymTab(listing);

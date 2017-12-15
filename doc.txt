@@ -1,0 +1,34 @@
+  FAT:
+    0: Quantidade de programas      --> 10 Programas iniciais + SO = 11
+    1: Espaço por programa          --> 5
+    2: Próxima posição disponível para criar um programa
+    PARA CADA PROGRAMA :
+    3: Usado ou não
+    4: Nome
+    5: Início do programa
+    6: Tamanho da memória de instruções
+    7: Tamanho da memória de dados
+
+  TROCA DE CONTEXTO: vetor com os seguintes dados
+    0) PC do processo
+    1) ID do processo
+    2) Em execução?
+    3) Endereço base MI
+    4) Endereço base MD
+
+  FUNÇÕES:
+    HDtoMI(posMI, sector, track): puxar instruções do HD para a MI.
+    RFtoHD(posReg dado por um registrador, sector, track): escrever valor do banco de registradores para o HD.
+    HDtoRF(posReg dado por um registrador, sector, track): escrever valor do HD para o banco de registradores.
+    a = HDtoMD(sector, track): escreve o valor lido do HD na variável "a".
+    dataToHD(valor, sector, track): escrever dado no HD.
+
+    setMultiprogramming(valor):
+      * valor = 0: Não há multiprogramação.
+      * valor = 1: Há multiprogramação.
+    executeProcess(novoPC, valorShiftMI, valorShiftMD): shift MI, shift MD and update PC.
+    a = getPCProcess(): retorna PC do processo que estava em execução antes da preempção.
+    setQuantum(valor): definir quantum para o PC.
+    setProcess(valor): definir o processo a ser executado.
+    setAddrContextSwitch(valor): definir o endereço para troca de contexto.
+    returnMain(): retorna para o prompt.

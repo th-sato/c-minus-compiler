@@ -13,7 +13,7 @@ typedef enum {FunctionOP, EndFunctionOP, HaltOP, CallOP, LabelOP, IF_fOP, GotoOP
 
 typedef enum {regT, immediateT, addressIT} OperatingType;
 
-typedef enum {sumAO, sumiAO, subAO, subiAO, multAO, divAO, lwAO, lrAO, loadiAO, swAO, swrAO, andAO, orAO, xorAO, norAO, notAO, sltAO, sleAO, sgtAO, sgeAO, eqAO, neqAO, srlAO, sllAO, beqAO, bnqAO, jAO, jrAO, jalAO, nopAO, hltAO, moveAO, inAO, outAO, delayOutAO, delayNotOutAO} AssemblyOperation;
+typedef enum {sumAO, sumiAO, subAO, subiAO, multAO, divAO, lwAO, lrAO, loadiAO, swAO, swrAO, andAO, orAO, xorAO, norAO, notAO, sltAO, sleAO, sgtAO, sgeAO, eqAO, neqAO, srlAO, sllAO, beqAO, bnqAO, jAO, jrAO, jalAO, nopAO, hltAO, moveAO, inAO, outAO, delayOutAO, delayNotOutAO, hdToMIAO, RFtoHDAO, HDtoRFAO, HDtoMDAO, dataToHDAO, setMultiprogAO, setAddrCSAO, execProcessAO, setQuantumAO, setPCProcessAO, getPCProcessAO, setProcessAO} AssemblyOperation;
 
 typedef struct OperatingT
   { OperatingType type;

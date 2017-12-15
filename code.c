@@ -1,17 +1,62 @@
 #include "code.h"
 
 static int nextToBeReplacedRegS;
-static int memoryInstruction = 0; //Posição memória de instruções
-static BucketList functionActual = NULL;
+static int memoryInstruction; //Posição memória de instruções
+static BucketList functionActual;
+static Param_Funct params_function;
+
+//Shift dos registradores
+static int registerTBR;
+static int registerSBR;
+static int size_registerS;
+
+static void shiftRegistersProg(){
+  registerTBR = registerTBR_Prog;
+  registerSBR = registerSBR_Prog;
+  size_registerS = size_registerS_programs;
+}
+
+static void shiftRegistersContextSwitch(){
+  registerTBR = registerTBR_CS;
+  registerSBR = registerSBR_CS;
+  size_registerS = size_registerS_CS;
+}
+
+static void initializeCodeAssembly(){
+  shiftRegistersProg();
+  memoryInstruction = 0;
+  functionActual = NULL;
+  params_function = NULL;
+}
+
+static void fillCertainFieldsFAT(){
+  Program t = fat.p;
+  if(t != NULL){
+    while(t->next != NULL) t = t->next;
+    t->tamMI = memoryInstruction;
+    t->tamMD = locationMD;
+  }
+}
+
+static int keyFromString(char *key){
+  int i;
+  functionMap element;
+  for (int i = 0; i < NKEYS; i++) {
+    element = functionName[i];
+    if(strcmp(element.key,key) == 0)
+      return element.val;
+  }
+  return OTHER;
+}
 
 static void initializeRegisterS(){
-  nextToBeReplacedRegS = 0;
+  nextToBeReplacedRegS = registerSBR;
 }
 
 static int useRegisterS(){
   int pos = nextToBeReplacedRegS;
-  if(nextToBeReplacedRegS < size_registerS - 1) nextToBeReplacedRegS++;
-  else nextToBeReplacedRegS = 0;
+  if(nextToBeReplacedRegS < registerSBR + (size_registerS - 1)) nextToBeReplacedRegS++;
+  else nextToBeReplacedRegS = registerSBR;
   return pos;
 }
 
@@ -84,8 +129,9 @@ static void storeWord (AddressQuadElement instructionM, int registerPosR, int po
 
 //swi IMEDIATO, CONST	| Memory[CONST] = IMEDIATO
 static void storeI (AddressQuadElement instructionM, int immed, int constant){
-  loadi(instructionM, registerCONST1, immed);
-  storeWord(instructionM, registerCONST1, constant);
+  int registerCONST = useRegisterS();
+  loadi(instructionM, registerCONST, immed);
+  storeWord(instructionM, registerCONST, constant);
 }
 
 //swr $1, $2	| Memory[$2] = $1
@@ -124,45 +170,107 @@ static void out_instruction(AddressQuadElement instruction){
   addAssemblyElement(instruction, createElement(delayNotOutAO, NULL, NULL, NULL));
 }
 
-static void saveTempMemory(AddressQuadElement instruction){ //ARRUMAR
-  /*int i;
-  for(i=0; i<number_temp; i++){
-    storeWordSPIncrease(instruction, registerTBR+i, registerSP);
-  }*/
+//MI[$1] = HD[$2][$3]
+static void HD_to_MI_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(hdToMIAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
 }
 
-static void restoreTempBankR(AddressQuadElement instruction){ //ARRUMAR
-  /*int i;
-  for(i=number_temp-1; i>=0; i--){
-    //sp = sp - 1;
-    addAssemblyElement(instruction, createElement(subiAO, regOperating(registerSP), regOperating(registerSP), immediateOperating(1)));
-    loadWord(instruction, regT+i, registerSP);
-  }*/
+//HD[$2][$3] = $1
+static void RF_to_HD_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(RFtoHDAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+}
+
+//RF[$1] = HD[$2][$3]
+static void HD_to_RF_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(HDtoRFAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+}
+
+//$1 = HD[$2][$3]
+static void HD_to_MD_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(HDtoMDAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+}
+
+static void data_to_HD_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(dataToHDAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+}
+
+static void setMultiprog_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(setMultiprogAO, regOperating(params_function->param1), NULL, NULL));
+}
+
+static void setAddrCS_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(setAddrCSAO, regOperating(params_function->param1), NULL, NULL));
+}
+
+static void setQuantum_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(setQuantumAO, regOperating(params_function->param1), NULL, NULL));
+}
+
+static void setProcess_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(setProcessAO, regOperating(params_function->param1), NULL, NULL));
+}
+
+static void getPCProcess_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(getPCProcessAO, regOperating(params_function->param1), NULL, NULL));
+}
+
+static void setPCProcess_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(setPCProcessAO, regOperating(params_function->param1), NULL, NULL));
+}
+
+static void executeProc_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(execProcessAO, regOperating(params_function->param2), regOperating(params_function->param3), NULL));
+}
+
+static void fillParameters(Operating paramOutput, AddressQuadElement element){
+  switch (params_function->key) {
+    case PARAM1: //MI or Data
+      params_function->param1 = useRegisterS();
+      assignReg(element, params_function->param1, paramOutput->op);
+      break;
+    case PARAM2: //SECTOR
+      params_function->param2 = useRegisterS();
+      assignReg(element, params_function->param2, paramOutput->op);
+      break;
+    case PARAM3: //TRACK
+      params_function->param3 = useRegisterS();
+      assignReg(element, params_function->param3, paramOutput->op);
+      break;
+    default:
+      fprintf(listing, "ERROR: WriteHDToMI\n");
+      break;
+  }
 }
 
 static void instructionMult(AddressQuadElement element, Operating result, Operating op1, Operating op2){ //Somente valores positivos
   int ret;
-  loadi(element, registerMD1, 0); //Contador
-  loadi(element, registerMD2, 0); //Resultado
+  int regContador = useRegisterS();
+  int regResultado = useRegisterS();
+  loadi(element, regContador, 0);
+  loadi(element, regResultado, 0);
   ret = memoryInstruction;
-  addAssemblyElement(element, createElement(sumAO, regOperating(registerMD2), regOperating(registerMD2), op1));
-  addAssemblyElement(element, createElement(sumiAO, regOperating(registerMD1), regOperating(registerMD1), immediateOperating(1)));
-  addAssemblyElement(element, createElement(bnqAO, regOperating(registerMD1), op2, addrITOperating(ret)));
-  assignReg(element, result->op, registerMD2);
+  addAssemblyElement(element, createElement(beqAO, op2, immediateOperating(0), addrITOperating(ret+4)));
+  addAssemblyElement(element, createElement(sumAO, regOperating(regResultado), regOperating(regResultado), op1));
+  addAssemblyElement(element, createElement(sumiAO, regOperating(regContador), regOperating(regContador), immediateOperating(1)));
+  addAssemblyElement(element, createElement(bnqAO, regOperating(regContador), op2, addrITOperating(ret)));
+  assignReg(element, result->op, regResultado);
   //addAssemblyElement(element, createElement(multAO, result, op1, op2));
 }
 
 static void instructionDiv(AddressQuadElement element, Operating result, Operating op1, Operating op2){ //Somente valores positivos
   int ret;
-  loadi(element, registerMD1, 0);
-  loadi(element, registerMD2, 0); //Resultado
+  int regSomador = useRegisterS();
+  int regResultado = useRegisterS();
+  int regComparador = useRegisterS();
+  loadi(element, regSomador, 0);
+  loadi(element, regResultado, 0); //Resultado
   ret = memoryInstruction;
-  addAssemblyElement(element, createElement(sumAO, regOperating(registerMD1), regOperating(registerMD1), op2));
-  addAssemblyElement(element, createElement(sumiAO, regOperating(registerMD2), regOperating(registerMD2), immediateOperating(1)));
-  addAssemblyElement(element, createElement(sltAO, regOperating(registerMDR),regOperating(registerMD1), op1));
-  addAssemblyElement(element, createElement(bnqAO, regOperating(registerMDR), regOperating(registerZero), addrITOperating(ret)));
-  addAssemblyElement(element, createElement(subiAO, regOperating(registerMD2), regOperating(registerMD2), immediateOperating(1)));
-  assignReg(element, result->op, registerMD2);
+  addAssemblyElement(element, createElement(sumAO, regOperating(regSomador), regOperating(regSomador), op2));
+  addAssemblyElement(element, createElement(sumiAO, regOperating(regResultado), regOperating(regResultado), immediateOperating(1)));
+  addAssemblyElement(element, createElement(sleAO, regOperating(regComparador),regOperating(regSomador), op1));
+  addAssemblyElement(element, createElement(bnqAO, regOperating(regComparador), regOperating(registerZero), addrITOperating(ret)));
+  addAssemblyElement(element, createElement(subiAO, regOperating(regResultado), regOperating(regResultado), immediateOperating(1)));
+  assignReg(element, result->op, regResultado);
   //addAssemblyElement(element, createElement(divAO, result, op1, op2));
 }
 
@@ -178,7 +286,6 @@ static bool isItParameter(char* paramToCompare){
 
 static int checkBucketL (AddressQuadElement instructionM, BucketList b){
   int pos = useRegisterS(b);
-  pos += registerSBR;
   if(b->vector){
     if(isItParameter(b->name)) loadWord(instructionM, pos, b->memloc);
     else loadi(instructionM, pos, b->memloc);
@@ -188,6 +295,7 @@ static int checkBucketL (AddressQuadElement instructionM, BucketList b){
 }
 
 static Operating checkOperator(AddressQuadElement instructionM, AddressData ad){
+  int registerCONST;
   switch (ad->addressKind) {
     case BucketL:
       return regOperating(checkBucketL(instructionM, ad->addr.bPointer));
@@ -201,14 +309,9 @@ static Operating checkOperator(AddressQuadElement instructionM, AddressData ad){
       return regOperating(registerTBR + ad->addr.nTemp);
       break;
     case Const:
-      if(instructionM->addr1 == ad){
-        loadi(instructionM, registerCONST1, ad->addr.constant);
-        return regOperating(registerCONST1);
-      }
-      else if (instructionM->addr2 == ad){
-        loadi(instructionM, registerCONST2, ad->addr.constant);
-        return regOperating(registerCONST2);
-      }
+      registerCONST = useRegisterS();
+      loadi(instructionM, registerCONST, ad->addr.constant);
+      return regOperating(registerCONST);
       break;
     default:
       break;
@@ -276,6 +379,7 @@ static int assignResult (AddressQuadElement instructionM, AddressData ad){ //End
 }
 
 static void assignInstruction(AddressQuadElement element){
+  int registerCONST;
   int addr = assignResult(element, element->result); //Posição na memória
   Operating value = assignValue(element, element->addr1);
   switch (element->result->addressKind) {
@@ -297,8 +401,9 @@ static void assignInstruction(AddressQuadElement element){
           storeReg(element, value->op, addr);
           break;
         case immediateT:
-          loadi(element, registerCONST1, value->op);
-          storeReg(element, registerCONST1, addr);
+          registerCONST = useRegisterS();
+          loadi(element, registerCONST, value->op);
+          storeReg(element, registerCONST, addr);
           break;
         default:
           break;
@@ -368,7 +473,98 @@ static void returnInstruction(AddressQuadElement instructionM){
   }
 }
 
+static void paramSystemCallOrIO(BucketList functionCall, AddressQuadElement element){
+  Operating paramOutput = checkOperator(element, element->addr1);
+  switch (keyFromString(functionCall->name)) {
+    case OUTPUT:
+      assignReg(element, registerINOUT, paramOutput->op);
+      break;
+    case HDtoMI:
+    case RFtoHD:
+    case HDtoRF:
+    case HDtoMD:
+    case dataToHD:
+      fillParameters(paramOutput, element);
+      break;
+    case setMultiprog:
+    case setQuantum:
+    case setAddrCS:
+    case setProcess:
+      params_function->param1 = useRegisterS();
+      assignReg(element, params_function->param1, paramOutput->op);
+      break;
+    case executeProc:
+      fillParameters(paramOutput, element);
+      break;
+    default:
+      fprintf(listing, "Error: Call Function!\n");
+      break;
+  }
+}
+
+static void systemCallOrIO(AddressQuad code, AddressQuadElement element){
+  switch (keyFromString(element->addr1->addr.bPointer->name)) {
+    case INPUT:
+      in_instruction(element);
+      assignReg(element, registerTBR + element->result->addr.nTemp, registerINOUT);
+      break;
+    case OUTPUT:
+      out_instruction(element);
+      break;
+    case MAIN:
+      jump(element, searchFunction(code, element->addr1->addr.bPointer));
+      break;
+    case HDtoMI:
+      HD_to_MI_instruction(element);
+      break;
+    case RFtoHD:
+      RF_to_HD_instruction(element);
+      break;
+    case HDtoRF:
+      HD_to_RF_instruction(element);
+      break;
+    case HDtoMD:
+      params_function->param1 = useRegisterS();
+      HD_to_MD_instruction(element);
+      assignReg(element, registerTBR + element->result->addr.nTemp, params_function->param1);
+      break;
+    case dataToHD:
+      data_to_HD_instruction(element);
+      break;
+    case setMultiprog:
+      setMultiprog_instruction(element);
+      break;
+    case setAddrCS:
+      setAddrCS_instruction(element);
+      break;
+    case setQuantum:
+      setQuantum_instruction(element);
+      break;
+    case setProcess:
+      setProcess_instruction(element);
+      break;
+    case getPCProcess:
+      getPCProcess_instruction(element);
+      assignReg(element, registerTBR + element->result->addr.nTemp, params_function->param1);
+      break;
+    case executeProc:
+      setPCProcess_instruction(element);
+      executeProc_instruction(element);
+      break;
+    case returnMain:
+      jump(element, 0);
+      break;
+    default:
+      storeI(element, memoryInstruction+3, element->addr1->addr.bPointer->memloc);
+      jump(element, searchFunction(code, element->addr1->addr.bPointer));
+      if(element->result != NULL)
+        assignReg(element, registerTBR + element->result->addr.nTemp, registerRV);
+      break;
+  }
+}
+
 static void exitFunction(AddressQuadElement instructionM){
+  int registerAR = useRegisterS();
   loadWord(instructionM, registerAR, functionActual->memloc);
   jumpR(instructionM, registerAR);
 }
@@ -390,14 +586,36 @@ static void changeJumpCall(AddressQuad code, AddressQuadElement element){
   aux->result->op = changeJump(code, aux->result->op);
 }
 
+static int checkNameFunction(char *name){
+  switch (keyFromString(name)) {
+    case INPUT:
+    case OUTPUT:
+    case HDtoMI:
+    case RFtoHD:
+    case HDtoRF:
+    case HDtoMD:
+    case dataToHD:
+    case setMultiprog:
+    case setAddrCS:
+    case executeProc:
+    case setQuantum:
+    case getPCProcess:
+    case returnMain:
+    case setProcess:
+      return 0;
+      break;
+    default:
+      return 1;
+      break;
+  }
+}
+
 static void correctJumps(AddressQuad code){
   AddressQuadElement element = code->first;
-  char *name = NULL;
   while (element != NULL) {
     switch (element->op) {
       case CallOP:
-        name = element->addr1->addr.bPointer->name;
-        if(strcmp(name, "input")!=0 && strcmp(name, "output")!=0)
+        if(checkNameFunction(element->addr1->addr.bPointer->name))
           changeJumpCall(code, element);
         break;
       case GotoOP:
@@ -451,6 +669,18 @@ void print_assembly_operation(AssemblyOperation a){
     case outAO: fprintf(listing, "out"); break;
     case delayOutAO: fprintf(listing, "delay out"); break;
     case delayNotOutAO: fprintf(listing, "delay not out"); break;
+    case hdToMIAO: fprintf(listing, "HD to MI"); break;
+    case RFtoHDAO: fprintf(listing, "RF to HD"); break;
+    case HDtoRFAO: fprintf(listing, "HD to RF"); break;
+    case HDtoMDAO: fprintf(listing, "HD to MD"); break;
+    case dataToHDAO: fprintf(listing, "dataToHD"); break;
+    case setMultiprogAO: fprintf(listing, "setMultiprogramming"); break;
+    case setAddrCSAO: fprintf(listing, "setAddrContextSwitch"); break;
+    case execProcessAO: fprintf(listing, "executeProcess"); break;
+    case setQuantumAO: fprintf(listing, "setQuantum"); break;
+    case setPCProcessAO: fprintf(listing, "setPCProcess"); break;
+    case getPCProcessAO: fprintf(listing, "getPCProcess"); break;
+    case setProcessAO: fprintf(listing, "setProcess"); break;
     default: break;
   }
 }
@@ -497,11 +727,11 @@ void print_assembly (AddressQuad code){
 }
 
 void print_arithmetic_operations(FILE * codefile, int function, int RD, int RS, int RT){
-  fprintf(codefile, "6'd0, 5'd%d, 5'd%d, 5'd%d, 5'bxxxxx, 6'd%d", RD, RS, RT, function);
+  fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 5'd0, 6'd%d", ALU, RD, RS, RT, function);
 }
 
 void print_arithmetic_operations_immediate(FILE * codefile, int function, int RD, int RS, int immed){
-  fprintf(codefile, "6'd0, 5'd%d, 5'd%d, 10'd%d, 6'd%d", RD, RS, immed, function);
+  fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 10'd%d, 6'd%d", ALU, RD, RS, immed, function);
 }
 
 void print_instruction(Assembly assemblyPrint, FILE * codefile){
@@ -543,49 +773,89 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
       print_arithmetic_operations(codefile, 18, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
     case lwAO:
-      fprintf(codefile, "6'd1, 5'd%d, 1'bx, 20'd%d", assemblyPrint->result->op, assemblyPrint->op1->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 1'b0, 20'd%d", LW, assemblyPrint->result->op, assemblyPrint->op1->op);
       break;
     case loadiAO:
-      fprintf(codefile, "6'd2, 5'd%d, 21'd%d", assemblyPrint->result->op, assemblyPrint->op1->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd%d", LI, assemblyPrint->result->op, assemblyPrint->op1->op);
       break;
     case lrAO:
-      fprintf(codefile, "6'd3, 5'd%d, 5'd%d, 16'd0", assemblyPrint->result->op, assemblyPrint->op1->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 16'd0", LR,  assemblyPrint->result->op, assemblyPrint->op1->op);
       break;
     case swAO:
-      fprintf(codefile, "6'd4, 5'd%d, 1'bx, 20'd%d", assemblyPrint->result->op, assemblyPrint->op1->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 1'b0, 20'd%d", SW, assemblyPrint->result->op, assemblyPrint->op1->op);
       break;
     case swrAO:
-      fprintf(codefile, "6'd5, 5'd%d, 5'd%d, 16'd0", assemblyPrint->result->op, assemblyPrint->op1->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 16'd0", SR, assemblyPrint->result->op, assemblyPrint->op1->op);
       break;
     case beqAO:
-      fprintf(codefile, "6'd6, 5'd%d, 5'd%d, 16'd%d", assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 16'd%d", BEQ, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
     case bnqAO:
-      fprintf(codefile, "6'd7, 5'd%d, 5'd%d, 16'd%d", assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 16'd%d", BNQ, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
     case jAO:
-      fprintf(codefile, "6'd8, 6'bxxxxxx, 20'd%d", assemblyPrint->result->op);
+      fprintf(codefile, "6'd%d, 6'd0, 20'd%d", JUMP, assemblyPrint->result->op);
       break;
     case jrAO:
-      fprintf(codefile, "6'd9, 5'd%d, 21'd0", assemblyPrint->result->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", JR, assemblyPrint->result->op);
       break;
     case nopAO:
-      fprintf(codefile, "6'd10, 26'd0");
+      fprintf(codefile, "6'd%d, 26'd0", NOP);
       break;
     case hltAO:
-      fprintf(codefile, "6'd11, 5'd%d, 21'd0", registerINOUT);
+      if(BIOS == TRUE)
+        fprintf(codefile, "6'd%d, 5'd%d, 21'd0", END_BIOS, registerINOUT);
+      else
+        fprintf(codefile, "6'd%d, 5'd%d, 21'd0", HLT, registerINOUT);
       break;
     case inAO:
-      fprintf(codefile, "6'd12, 5'd%d, 21'd0", assemblyPrint->result->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", IN, assemblyPrint->result->op);
       break;
     case outAO:
-      fprintf(codefile, "6'd13, 5'd%d, 21'd0", assemblyPrint->result->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", OUT, assemblyPrint->result->op);
       break;
     case delayOutAO:
-      fprintf(codefile, "6'd14, 5'd%d, 5'd0, 10'd450, 6'd0", assemblyPrint->result->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd0, 10'd450, 6'd0", DLY_OUT, assemblyPrint->result->op);
       break;
     case delayNotOutAO:
-      fprintf(codefile, "6'd15, 10'd0, 10'd450, 6'd0");
+      fprintf(codefile, "6'd%d, 10'd0, 10'd450, 6'd0", DLY_NOT_OUT);
+      break;
+    case hdToMIAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", HD_LOAD_INST_MEM, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      break;
+    case RFtoHDAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", RF_to_HD, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      break;
+    case HDtoRFAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", HD_to_RF, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      break;
+    case HDtoMDAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", HD_to_MD, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      break;
+    case dataToHDAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", WRITE_DATA_HD, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      break;
+    case setMultiprogAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_MULTIPROG, assemblyPrint->result->op);
+      break;
+    case setQuantumAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_QUANTUM, assemblyPrint->result->op);
+      break;
+    case setAddrCSAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_ADDR_CS, assemblyPrint->result->op);
+      break;
+    case setPCProcessAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_PC_PROCESS, assemblyPrint->result->op);
+      break;
+    case getPCProcessAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", GET_PC_PROCESS, assemblyPrint->result->op);
+      break;
+    case execProcessAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 16'd0", EXEC_PROCESS_X, assemblyPrint->result->op, assemblyPrint->op1->op);
+      break;
+    case setProcessAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_PROCESS, assemblyPrint->result->op);
+    break;
       break;
     default:
       fprintf(listing, "Error");
@@ -599,7 +869,7 @@ void print_objectCode(AddressQuad code, FILE * codefile){
   while(aux!=NULL){
     aux2 = aux->objectCode;
     while(aux2!=NULL){
-      fprintf(codefile, "instructionM[%d] <= {", aux2->memlocI);
+      fprintf(codefile, "ram[%d] <= {", posSector*1024 + aux2->memlocI);
       print_instruction(aux2, codefile);
       fprintf(codefile, "};\n");
       aux2 = aux2->next;
@@ -611,38 +881,32 @@ void print_objectCode(AddressQuad code, FILE * codefile){
 void codeGenerationAssembly(AddressQuad code, FILE * codefile){
   AddressQuadElement element = code->first;
   BucketList functionCall = NULL;
-  Operating paramOutput = NULL;
   List paramList = NULL;
+  initializeCodeAssembly();
+  params_function = (Param_Funct) malloc(sizeof(Param_Funct));
   while(element != NULL && !Error){
     switch (element->op) {
       case FunctionOP: //OK
         functionActual = element->addr1->addr.bPointer;
+        if((SO == TRUE) && (strcmp(functionActual->name, "contextSwitch")==0))
+          shiftRegistersContextSwitch();
         initializeRegisterS();
         break;
       case EndFunctionOP: //OK
         exitFunction(element);
+        if((SO == TRUE) && (strcmp(functionActual->name, "contextSwitch")==0))
+          shiftRegistersProg();
         functionActual = NULL;
         break;
       case HaltOP: //OK
         instructionHalt(element);
         break;
       case CallOP://OK
-        initializeRegisterS();
+        if(checkNameFunction(element->addr1->addr.bPointer->name) == 1)
+          initializeRegisterS();
         functionCall = NULL;
         paramList = NULL;
-        if(strcmp(element->addr1->addr.bPointer->name, "input")==0){
-          in_instruction(element);
-          assignReg(element, registerTBR + element->result->addr.nTemp, registerINOUT);
-        }
-        else if (strcmp(element->addr1->addr.bPointer->name, "output")==0)
-          out_instruction(element);
-        else if(strcmp(element->addr1->addr.bPointer->name, "main")!=0){
-          storeI(element, memoryInstruction+3, element->addr1->addr.bPointer->memloc);
-          jump(element, searchFunction(code, element->addr1->addr.bPointer));
-          if(element->result != NULL)
-            assignReg(element, registerTBR + element->result->addr.nTemp, registerRV);
-        }
-        else jump(element, searchFunction(code, element->addr1->addr.bPointer));
+        systemCallOrIO(code, element);
         break;
       case IF_fOP: //Ok
          if_instruction(element);
@@ -653,14 +917,14 @@ void codeGenerationAssembly(AddressQuad code, FILE * codefile){
       case ParamOP: //OK
         if(functionCall == NULL){
           functionCall = foundCall(element);
+          if(strcmp(functionCall->name, "HDtoMD") == 0)
+            params_function->key = PARAM2;
+          else params_function->key = PARAM1;
           paramList = functionCall->param->list;
         }
         if(paramList == NULL){
-          if(strcmp(functionCall->name, "output")==0){
-            paramOutput = checkOperator(element, element->addr1);
-            assignReg(element, registerINOUT, paramOutput->op);
-          }
-          else fprintf(listing, "Error: Call Function!\n");
+          paramSystemCallOrIO(functionCall, element);
+          params_function->key++;
         }
         else{
           writeParamInMemory(element, paramList->location);
@@ -694,4 +958,6 @@ void codeGenerationAssembly(AddressQuad code, FILE * codefile){
   correctJumps(code);
   print_assembly(code);
   print_objectCode(code, codefile);
+  if(!BIOS)
+    fillCertainFieldsFAT();
 }

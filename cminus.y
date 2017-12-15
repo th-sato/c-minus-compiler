@@ -13,7 +13,7 @@ int yyerror(char * message);
 
 %}
 
-%token IF ELSE RETURN WHILE
+%token IF ELSE RETURN WHILE FOR
 %token INT VOID NUM ID
 %token PLUS MINUS OVER TIMES LT LTE GT GTE EQ NEQ ASSIGN SEMI VG LPAREN RPAREN LBRACKET RBRACKET LKEY RKEY
 %token ERROR
@@ -151,6 +151,7 @@ statement   : expr_stmt { $$ = $1; }
 	    	    | comp_stmt { $$ = $1; }
 	    	    | sel_stmt { $$ = $1; }
 	    	    | it_stmt { $$ = $1; }
+            | for_stmt { $$ = $1; }
 	    	    | ret_stmt { $$ = $1; }
 	    	    ;
 // expressao-decl -> expressao ; | ;
@@ -177,6 +178,17 @@ it_stmt     : WHILE LPAREN expr RPAREN statement
 		  		      $$->child[1] = $5;
 				      }
 	    	    ;
+//for-decl -> for ( expressao; expressao; expressao) statement
+for_stmt    : FOR LPAREN expr SEMI expr SEMI expr RPAREN statement
+            { YYSTYPE t;
+              $$ = $3;
+              $$->sibling = newStmtNode(WhileK);
+              t = $$->sibling;
+              t->child[0] = $5;
+              t->child[1] = $9;
+              t->child[2] = $7;
+            }
+            ;
 //retorno-decl -> return ; | return expressão;
 ret_stmt    : RETURN SEMI { $$ = newStmtNode(ReturnK); }
 	    	    | RETURN expr SEMI

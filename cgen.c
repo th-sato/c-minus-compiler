@@ -2,14 +2,28 @@
 #include "cgen.h"
 
 static int tmpNumber;
-static Stack stack = NULL;
-static AddressQuadElement elementSaved = NULL;
+static Stack stack;
+static AddressQuadElement elementSaved;
 static bool vector_temp[number_temp];
-static int imIntermediateCode = 1;
-AddressQuad CodeAddrQ = NULL;
+static int imIntermediateCode;
+AddressQuad CodeAddrQ;
 
 /* prototype for internal recursive code generator */
 static void cGen (TreeNode * tree);
+
+static void initializeVectorTemp(){
+  int i;
+  for(i=0; i<number_temp; i++)
+    vector_temp[i] = false;
+}
+
+static void initializeCodeGen (){
+  stack = NULL;
+  elementSaved = NULL;
+  CodeAddrQ = NULL;
+  imIntermediateCode = 1;
+  initializeVectorTemp();
+}
 
 static AddressQuadElement insertNewElementQuad (OperationKind op, AddressData add1, AddressData add2, AddressData res, int instructionMemory){
   AddressQuadElement newElement = (AddressQuadElement)malloc(sizeof(struct ThreeAddressQuadElement));
@@ -209,12 +223,6 @@ static AddressData insertTempDataToCall(TreeNode *t){
   else if(b->typeData == Integer) return insertTempData(TempValue);
 }
 
-static void initializeVectorTemp(){
-  int i;
-  for(i=0; i<number_temp; i++)
-    vector_temp[i] = false;
-}
-
 /* Procedure genStmt generates code at a statement node */
 static void genStmt( TreeNode * tree)
 { TreeNode * p1, * p2, * p3, *aux;
@@ -243,6 +251,7 @@ static void genStmt( TreeNode * tree)
       case WhileK:
         p1 = tree->child[0];
         p2 = tree->child[1];
+        p3 = tree->child[2];
         labelReturnSaved = insertLabel();
         cGen(p1);
         addr1 = returnAddressData(p1);
@@ -250,6 +259,7 @@ static void genStmt( TreeNode * tree)
         insertThreeAddressQuad(elementSaved);
         insertElementStack(elementSaved);
         cGen(p2);
+        if(p3!=NULL) cGen(p3);
         insertThreeAddressQuad(insertNewElementQuad(GotoOP, NULL, NULL, labelReturnSaved, imIntermediateCode++));
         updateStack(insertLabel());
         break;
@@ -523,7 +533,7 @@ static void print_address_quad(){
  * file name as a comment in the code file
  */
 void codeGen(TreeNode * syntaxTree, FILE * codefile)
-{  initializeVectorTemp();
+{  initializeCodeGen();
    /* generate code for CMinus program */
    cGen(syntaxTree);
    insertMainThreeAddressQuad();

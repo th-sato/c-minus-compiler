@@ -1,0 +1,206 @@
+int inicio;
+int n_process_exec;
+int exec;
+int qtd_regs;
+int tam_vector_CS;
+int CS[100];
+
+void contextSwitch (){
+  int i; int prox_exec; int stay;
+  setMultiprogramming(0);
+  stay = 0;
+  //Processo terminou?
+  if(getPCProcess() == (CS[exec+5] - 1))
+    CS[exec + 2] = 0; //Terminou
+  else {
+    //Guardar dados do banco de registradores no HD
+    for(i = 1; i < qtd_regs; i = i+1){
+      RFtoHD(i, CS[exec+6], CS[exec+7] + i);
+    }
+  }
+  //Definir processo a ser executado
+  for(i = 0; i < n_process_exec; i = i + 1){
+    if(stay == 0){
+      prox_exec = exec + 5;
+      if(prox_exec > tam_vector_CS) exec = 0;
+      else exec = prox_exec;
+      if(CS[exec+2] == 1) //Processo em execução
+        stay = 1; //Encontrou um processo para executar
+      else stay = 0; //Não há mais processos para executar
+    }
+  }
+  if(stay != 0){
+    //Voltar ao banco de registradores antes da troca de contexto
+    for(i = 1; i < qtd_regs; i = i+1){
+      HDtoRF(i, CS[exec+6], CS[exec+7] + i);
+    }
+    setMultiprogramming(1);
+    executeProcess(CS[exec], CS[exec+3], CS[exec+4]); //Executar processo no primeiro vetor
+  }
+  else {
+    output(123);
+    returnMain();
+  }
+}
+
+int findProgram(int program){
+  int num_prog; int space_prog; int i; int j; int aux;
+  num_prog = HDtoMD(0,0);
+  space_prog = HDtoMD(0,1);
+  j = inicio;
+  for(i = 0; i < num_prog; i = i + 1){
+    if(HDtoMD(0,j) == 1){ //Há um programa
+      aux = HDtoMD(0,j+1);
+      if (aux == program)
+        return j;
+    }
+    j = j + space_prog;
+  }
+  return 111;
+}
+
+void loadProgram (int posMI, int program){
+  int pos; int start; int end; int i; int sector;
+  pos = findProgram(program);
+  start = HDtoMD(0, pos+2);
+  end = start + HDtoMD(0, pos+3);
+  sector = i/1024;
+  for(i = start; i < end; i = i + 1){
+    HDtoMI(posMI, sector, i - sector*1024);
+    posMI = posMI + 1;
+  }
+}
+
+void executeNPrograms(){
+  int i; int program; int posMI; int posMD; int pos;
+  int base; int fp; int so_location; int hd;
+  int sector;
+  n_process_exec = input();
+  exec = 0;
+  so_location = findProgram(0);
+  posMI = HDtoMD(0, so_location + 3);
+  posMD = HDtoMD(0, so_location + 4);
+  base = 0;
+  for(i = 0; i < n_process_exec; i = i+1){
+    program = input();
+    if(program != 0){
+      fp = findProgram(program);
+      if(fp != 111){
+        loadProgram(posMI, program);
+        CS[base]    = 0;                    //PC do processo
+        CS[base+1]  = HDtoMD(0, fp + 1);    //Nome do programa
+        CS[base+2]  = 1;                    //Em execução
+        CS[base+3]  = posMI;                //base MI
+        CS[base+4]  = posMD;                //base MD
+        CS[base+5]  = HDtoMD(0, fp + 3);    //Quantidade de instruções
+        hd = HDtoMD(0, fp+2);
+        sector = hd/1024;
+        CS[base+6]  = sector;               //Setor
+        CS[base+7]  = hd - sector*1024;     //Trilha
+        posMI = posMI + HDtoMD(0, fp + 3);
+        posMD = posMD + HDtoMD(0, fp + 4);
+        base = base + 8;
+      }
+    }
+  }
+  tam_vector_CS = base;
+  setMultiprogramming(1);
+  executeProcess(CS[exec], CS[exec+3], CS[exec+4]); //Executar processo no primeiro vetor
+}
+
+void executeProgram(int program){
+  int posMI; int posMD; int so_location;
+  so_location = findProgram(0);
+  posMI = HDtoMD(0, so_location + 3);
+  posMD = HDtoMD(0, so_location + 4);
+  loadProgram(posMI, program);
+  executeProcess(0, posMI, posMD);
+}
+
+int deleteProgram(int program){
+  int j; int num_prog;
+  num_prog = HDtoMD(0,0);
+  j = findProgram(program);
+  if(j == 111) return 111;
+  if(j != 0){
+    dataToHD(0, 0, j); //Apagar do HD
+    dataToHD(num_prog - 1, 0, 0);
+    return 123;
+  }
+}
+
+void createProgram(){
+  int num_prog; int space_prog; int prox_pos; int instruction;
+  int name; int i;
+  num_prog = HDtoMD(0,0);
+  space_prog = HDtoMD(0,1);
+  prox_pos = HDtoMD(0,2);
+  i = 3;
+  while(HDtoMD(0,i) == 1){
+    i = i + space_prog;
+  }
+  name = input();                 //Nome do programa
+
+  //Preencher FAT
+  dataToHD(1, 0, i);              //Usado ou não
+  dataToHD(name, 0, i+1);         //Nome do programa
+  dataToHD(3, 0, i+2);            //Quantidade de instruções
+  dataToHD(0, 0, i+3);            //Tamanho da memória de dados
+
+  //Adicionar instruções
+  instruction = input(); //Entrar com uma instrução com até 16 bits
+  instruction = instruction * 65536;
+  dataToHD(instruction, prox_pos);
+  instruction = input(); //Entrar com uma instrução com até 16 bits
+  instruction = instruction * 65536;
+  dataToHD(instruction, prox_pos+1);
+  instruction = instruction * 65536;
+  dataToHD(instruction, prox_pos+2);
+
+  //Incrementar quantidade de programas
+  dataToHD(num_prog+1, 0, 0);     //Atualizar número de programas
+  dataToHD(prox_pos*1024, 0, 2);  //Atualizar próxima posição para escrita
+}
+
+void renameProgram(int program){
+  int j; int num_prog; int new_name;
+  num_prog = HDtoMD(0,0);
+  j = findProgram(program);
+  if(j == 111) return 111;
+  if(j != 0){
+    new_name = input();
+    dataToHD(new_name, 0, j+1); //Renomear
+    return 123;
+  }
+}
+
+/* PROMPT */
+void main(){
+  int option; int program;
+  inicio = 3;
+  qtd_regs = 22;
+  setAddrContextSwitch(1);
+  setQuantum(50);
+  while (1 == 1){
+    option = input();
+    if(option == 1){ //Executar um programa
+      program = input();
+      loadProgram(program);
+      executeProgram(program);
+    }
+    else if(option == 2){ //Executar n programas
+      executeNPrograms();
+    }
+    else if(option == 3){ //Renomear um programa
+      program = input();
+      output(renameProgram(program));
+    }
+    else if(option == 4){ //Criar um programa
+      createProgram();
+    }
+    else if(option == 5){ //Deletar um programa
+      program = input();
+      output(deleteProgram(program));
+    }
+  }
+}

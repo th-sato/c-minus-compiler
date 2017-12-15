@@ -10,7 +10,7 @@ static int yylex(void);
 digit       [0-9]
 number      {digit}+
 letter      [a-zA-Z]
-identifier  {letter}+
+identifier  [a-zA-Z_][a-zA-Z0-9_]*
 newline     \n
 whitespace  [ \t\r]+
 
@@ -22,6 +22,7 @@ whitespace  [ \t\r]+
 "return"	      {return RETURN;}
 "void"		      {return VOID;}
 "while"		      {return WHILE;}
+"for"           {return FOR;}
 "+"		          {return PLUS;}
 "-"		          {return MINUS;}
 "/"		          {return OVER;}
@@ -45,6 +46,15 @@ whitespace  [ \t\r]+
 {identifier}    {return ID;}
 {newline}       {lineno++;}
 {whitespace}    {/* skip whitespace */}
+"//"            { char c;
+                  int check = 0;
+                  do{
+                    c = input();
+                    if (c == EOF) break;
+                    if (c == '\n') check = 1;
+                  } while (!check);
+                  lineno++;
+                }
 "/*"            { char c; int end = 0;
                   do
                   { c = input();
@@ -63,9 +73,12 @@ whitespace  [ \t\r]+
 TokenType getToken(void)
 { static int firstTime = TRUE;
   TokenType currentToken;
-  if (firstTime)
-  { firstTime = FALSE;
+  if (firstTime){
+    firstTime = FALSE;
     lineno++;
+    yyin = source;
+    yyout = listing;
+  } else{
     yyin = source;
     yyout = listing;
   }
