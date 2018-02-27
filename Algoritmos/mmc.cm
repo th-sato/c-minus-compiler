@@ -29,4 +29,3 @@ void main(void){
     numDOIS = input();
     output(mmc(numUM, numDOIS));
 }
-

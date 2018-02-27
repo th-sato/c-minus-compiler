@@ -1,9 +1,75 @@
+-------------------------------------------------------------------------------------------------
+-------------------------------- ADICIONAR FUNÇÕES NO COMPILADOR --------------------------------
+-------------------------------------------------------------------------------------------------
+Arquivo ".cm": código em cminus.
+Arquivo ".sato": código-objeto.
+--> Para adicionar funções no compilador, altere os seguintes arquivos:
+  1) analyze.c  --> insertionOfProcessorFunctions()
+  2) code.c     --> criar função para a instrução
+                --> systemCallOrIO()
+                --> paramSystemCallOrIO()
+                --> checkNameFunction()
+                --> print_assembly_operation()
+                --> print_instruction()
+  3) code.h     --> Funtions    --> typedef enum
+                --> FunctionMap --> functionName []
+  4) cgen.h     --> AssemblyOperation --> typedef enum
+-------------------------------------------------------------------------------------------------
+----------------------------- EXPLICAÇÃO DOS ARQUIVOS DO COMPILADOR -----------------------------
+-------------------------------------------------------------------------------------------------
+  a) Pasta "Algoritmos": possui os algoritmos para execução no processador.
+    --> "hd.sato": código-objeto com os algoritmos.
+  b) Pasta "Exemplos Passados": algoritmos testados na matéria de Laboratório de Compiladores.
+  c) Pasta "Teste": algoritmos testados na matéria de Compiladores (Teórica).
+  d) Pasta "SO": possui o código da BIOS e do Sistema Operacional (SO).
+    --> BIOS: primeiro programa a ser executado.
+      * Testa o display de 7 segmentos.
+      * Testa a entrada de dados.
+      * Testa o uso da memória de dados.
+      * Testa a ULA do processador.
+      * Testa o LCD.
+      * Puxa as instruções do HD para a memória de instruções.
+    --> SO: segundo programa a ser executado.
+      * Executar um programa.
+      * Executar n programas.
+      * Renomear um programa.
+      * Criar um programa.
+      * Deletar um programa.
+  e) "sample.cm": arquivo para teste.
+  f) "sample.sato": código-objeto do arquivo de teste.
+  g) "analyze.c": preenchimento da tabela de símbolos. Encontra alguns erros.
+    1) Verifica se uma função/variável já foi declarada.
+    2) Verifica se a variável é do tipo Boolean.
+    3) Condição do IF/WHILE: verifica se a condição é do tipo Boolean.
+    4) ASSIGN: não permite o retorno de uma função do tipo void para uma variável.
+    5) Permite somente operações entre inteiros.
+  h) "cgen.c": percorre a árvore sintática e gera o código intermediário.
+  i) "cgen.h": struct do código intermediário.
+  j) "cminus.l": responsável pela análise léxica.
+  k) "cminus.y": responsável pela análise sintática. Gera a árvore sintática.
+  l) "code.c": responsável pela geração do código-objeto.
+  m) "code.h": struct do código objeto.
+  n) "globals.h": possui as variáveis globais utilizadas pelo compilador.
+    * Nó da árvore
+    * Informações do programa
+    * Sistema de arquivos: FAT
+  o) "main.c": código principal, chama as outras funções para a geração do compilador cminus.
+    * "./cminus": gera o código-objeto para a BIOS, o SO e o HD.
+    * "./cminus nomePrograma": gera o código-objeto para o código passado como argumento.
+  p) "script.sh": script para a geração do compilador cminus.
+  q) "symtab.c": possui as funções para inserção na tabela de símbolos.
+  r) "symtab.h": possui a estrutura do BucketList.
+  s) "util.c": responsável pela impressão da árvore sintática.
+
+-------------------------------------------------------------------------------------------------
+------------------------ COMO UTILIZAR AS FUNÇÕES CRIADAS NO COMPILADOR -------------------------
+-------------------------------------------------------------------------------------------------
   FAT:
     0: Quantidade de programas      --> 10 Programas iniciais + SO = 11
     1: Espaço por programa          --> 5
     2: Próxima posição disponível para criar um programa
     PARA CADA PROGRAMA :
-    3: Usado ou não
+    3: Existe um programa?
     4: Nome
     5: Início do programa
     6: Tamanho da memória de instruções
@@ -17,18 +83,41 @@
     4) Endereço base MD
 
   FUNÇÕES:
-    HDtoMI(posMI, sector, track): puxar instruções do HD para a MI.
-    RFtoHD(posReg dado por um registrador, sector, track): escrever valor do banco de registradores para o HD.
-    HDtoRF(posReg dado por um registrador, sector, track): escrever valor do HD para o banco de registradores.
-    a = HDtoMD(sector, track): escreve o valor lido do HD na variável "a".
-    dataToHD(valor, sector, track): escrever dado no HD.
-
-    setMultiprogramming(valor):
-      * valor = 0: Não há multiprogramação.
-      * valor = 1: Há multiprogramação.
-    executeProcess(novoPC, valorShiftMI, valorShiftMD): shift MI, shift MD and update PC.
-    a = getPCProcess(): retorna PC do processo que estava em execução antes da preempção.
-    setQuantum(valor): definir quantum para o PC.
-    setProcess(valor): definir o processo a ser executado.
-    setAddrContextSwitch(valor): definir o endereço para troca de contexto.
-    returnMain(): retorna para o prompt.
+    1) a = input();
+      A variável "a" recebe o valor da entrada.
+    2) output(a);
+      A variável "a" é apresentada no display LCD.
+    3) delay(valor);
+      * "valor" deve ser um imediato.
+      * "valor" determina a quantidade de clocks que ficará ocioso.
+      * a troca de contexto não funciona durante o delay.
+    INSTRUÇÕES COM O HD:
+      * sector: 4 bits (0 a 15).
+      * track: 10 bits (0 a 1023).
+        --> Acesso do HD limitado a 14 bits (0 a 16384).
+    4) HD_Transfer_MI(posMI, sector, track);
+      * posMI: 12 bits (0 a 4095).
+      * Transfere a instrução do HD (setor e trilha) para a posição na memória de instruções (posMI).
+    5) HD_Write(a, sector, track);
+      A variável "a" é guardada na posição dada pelo setor e pela trilha.
+    6) a = HD_Read(sector, track);
+      O valor lido do HD é guardado na variável "a".
+    7) saveRF_in_HD(posRF, sector, track);
+      O valor do registrador[posRF] é guardado no HD.
+    8) recoveryRF(posRF, sector, track);
+      O valor do do HD é guardado em registrador[posRF].
+    9) setMultiprog(valor);
+      0: sem multiprogramação.
+      1: com multiprogramação.
+    10) setQuantum(valor);
+      Define o valor do quantum para a troca de contexto.
+    11) setAddrCS(valor);
+      Define o valor do endereço de troca de contexto.
+    12) setNumProg(valor);
+      Define o valor para aparecer no display LCD.
+    13) execProgram(novoPC, shiftMI, shiftMD);
+      Executa o programa que está na memória de instruções.
+    14) a = getPC_Process();
+      Guarda o último endereço do processo para continuar sua execução.
+    15) returnMain();
+      Executa a main.

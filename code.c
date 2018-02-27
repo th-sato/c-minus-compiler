@@ -13,13 +13,13 @@ static int size_registerS;
 static void shiftRegistersProg(){
   registerTBR = registerTBR_Prog;
   registerSBR = registerSBR_Prog;
-  size_registerS = size_registerS_programs;
+  size_registerS = num_registers_type;
 }
 
-static void shiftRegistersContextSwitch(){
-  registerTBR = registerTBR_CS;
-  registerSBR = registerSBR_CS;
-  size_registerS = size_registerS_CS;
+static void shiftRegistersSO(){
+  registerTBR = registerTBR_SO;
+  registerSBR = registerSBR_SO;
+  size_registerS = num_registers_type;
 }
 
 static void initializeCodeAssembly(){
@@ -159,67 +159,67 @@ static void if_instruction(AddressQuadElement instruction){
   addAssemblyElement(instruction, createElement(beqAO, regOperating(registerTBR + instruction->addr1->addr.nTemp), regOperating(registerZero), addrITOperating(instruction->result->addr.label)));
 }
 
-static void in_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(inAO, regOperating(registerINOUT), NULL, NULL));
-  addAssemblyElement(instruction, createElement(delayNotOutAO, NULL, NULL, NULL));
+static void in_instruction(AddressQuadElement instruction, int regPos){
+  addAssemblyElement(instruction, createElement(inAO, regOperating(regPos), NULL, NULL));
+  addAssemblyElement(instruction, createElement(delayAO, NULL, NULL, NULL));
 }
 
 static void out_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(outAO, regOperating(registerINOUT), NULL, NULL));
-  addAssemblyElement(instruction, createElement(delayOutAO, regOperating(registerINOUT), NULL, NULL));
-  addAssemblyElement(instruction, createElement(delayNotOutAO, NULL, NULL, NULL));
+  addAssemblyElement(instruction, createElement(outAO, regOperating(registerOUT), NULL, NULL));
+  addAssemblyElement(instruction, createElement(delayAO, NULL, NULL, NULL));
+}
+
+static void delay_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(delayAO, NULL, NULL, NULL));
 }
 
 //MI[$1] = HD[$2][$3]
-static void HD_to_MI_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(hdToMIAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+static void HD_transfer_MI_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(hd_transfer_miAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
 }
 
 //HD[$2][$3] = $1
-static void RF_to_HD_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(RFtoHDAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
-}
-
-//RF[$1] = HD[$2][$3]
-static void HD_to_RF_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(HDtoRFAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+static void saveRF_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(save_rf_hdAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
 }
 
 //$1 = HD[$2][$3]
-static void HD_to_MD_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(HDtoMDAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+static void recoveryRF_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(rec_rf_hdAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
 }
 
-static void data_to_HD_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(dataToHDAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+//HD[$2][$3] = RF[$1]
+static void saveRF_indirect_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(save_rf_hd_indAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+}
+
+//RF[$1] = HD[$2][$3]
+static void recoveryRF_indirect_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(rec_rf_hd_indAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
 }
 
 static void setMultiprog_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(setMultiprogAO, regOperating(params_function->param1), NULL, NULL));
-}
-
-static void setAddrCS_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(setAddrCSAO, regOperating(params_function->param1), NULL, NULL));
+  addAssemblyElement(instruction, createElement(set_multiprogAO, immediateOperating(params_function->param1), NULL, NULL));
 }
 
 static void setQuantum_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(setQuantumAO, regOperating(params_function->param1), NULL, NULL));
+  addAssemblyElement(instruction, createElement(set_quantumAO, regOperating(params_function->param1), NULL, NULL));
 }
 
-static void setProcess_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(setProcessAO, regOperating(params_function->param1), NULL, NULL));
+static void setAddrCS_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(set_addr_csAO, regOperating(params_function->param1), NULL, NULL));
+}
+
+static void setNumProg_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(set_num_progAO, regOperating(params_function->param1), NULL, NULL));
 }
 
 static void getPCProcess_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(getPCProcessAO, regOperating(params_function->param1), NULL, NULL));
+  addAssemblyElement(instruction, createElement(get_pc_processAO, regOperating(params_function->param1), NULL, NULL));
 }
 
-static void setPCProcess_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(setPCProcessAO, regOperating(params_function->param1), NULL, NULL));
-}
-
-static void executeProc_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(execProcessAO, regOperating(params_function->param2), regOperating(params_function->param3), NULL));
+static void executeProg_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(exec_progAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
 }
 
 static void fillParameters(Operating paramOutput, AddressQuadElement element){
@@ -237,7 +237,7 @@ static void fillParameters(Operating paramOutput, AddressQuadElement element){
       assignReg(element, params_function->param3, paramOutput->op);
       break;
     default:
-      fprintf(listing, "ERROR: WriteHDToMI\n");
+      fprintf(listing, "ERROR: using HD\n");
       break;
   }
 }
@@ -285,7 +285,7 @@ static bool isItParameter(char* paramToCompare){
 }
 
 static int checkBucketL (AddressQuadElement instructionM, BucketList b){
-  int pos = useRegisterS(b);
+  int pos = useRegisterS();
   if(b->vector){
     if(isItParameter(b->name)) loadWord(instructionM, pos, b->memloc);
     else loadi(instructionM, pos, b->memloc);
@@ -477,25 +477,26 @@ static void paramSystemCallOrIO(BucketList functionCall, AddressQuadElement elem
   Operating paramOutput = checkOperator(element, element->addr1);
   switch (keyFromString(functionCall->name)) {
     case OUTPUT:
-      assignReg(element, registerINOUT, paramOutput->op);
+      assignReg(element, registerOUT, paramOutput->op);
       break;
-    case HDtoMI:
-    case RFtoHD:
-    case HDtoRF:
-    case HDtoMD:
-    case dataToHD:
+    case HD_TRANSF_MI:
+    case HD_WRITE:
+    case HD_READ:
+    case SAVE_RF:
+    case RECOVERY_RF:
+    case EXEC_PROG:
       fillParameters(paramOutput, element);
       break;
-    case setMultiprog:
-    case setQuantum:
-    case setAddrCS:
-    case setProcess:
+    case SET_MULTIPROG:
+    case SET_QUANTUM:
+    case SET_ADDR_CS:
+    case SET_NUM_PROG:
       params_function->param1 = useRegisterS();
       assignReg(element, params_function->param1, paramOutput->op);
       break;
-    case executeProc:
-      fillParameters(paramOutput, element);
-      break;
+    /*case GET_PC_PROCESS:
+    case RETURN_MAIN:
+      break;*/
     default:
       fprintf(listing, "Error: Call Function!\n");
       break;
@@ -505,8 +506,7 @@ static void paramSystemCallOrIO(BucketList functionCall, AddressQuadElement elem
 static void systemCallOrIO(AddressQuad code, AddressQuadElement element){
   switch (keyFromString(element->addr1->addr.bPointer->name)) {
     case INPUT:
-      in_instruction(element);
-      assignReg(element, registerTBR + element->result->addr.nTemp, registerINOUT);
+      in_instruction(element, registerTBR + element->result->addr.nTemp);
       break;
     case OUTPUT:
       out_instruction(element);
@@ -514,47 +514,48 @@ static void systemCallOrIO(AddressQuad code, AddressQuadElement element){
     case MAIN:
       jump(element, searchFunction(code, element->addr1->addr.bPointer));
       break;
-    case HDtoMI:
-      HD_to_MI_instruction(element);
+    case DELAY:
+      delay_instruction(element);
       break;
-    case RFtoHD:
-      RF_to_HD_instruction(element);
+    case HD_TRANSF_MI:
+      HD_transfer_MI_instruction(element);
       break;
-    case HDtoRF:
-      HD_to_RF_instruction(element);
+    case HD_WRITE:
+      saveRF_instruction(element);
       break;
-    case HDtoMD:
-      params_function->param1 = useRegisterS();
-      HD_to_MD_instruction(element);
-      assignReg(element, registerTBR + element->result->addr.nTemp, params_function->param1);
+    case HD_READ:
+      params_function->param1 = registerTBR + element->result->addr.nTemp;
+      recoveryRF_instruction(element);
       break;
-    case dataToHD:
-      data_to_HD_instruction(element);
+    case SAVE_RF:
+      saveRF_indirect_instruction(element);
       break;
-    case setMultiprog:
+    case RECOVERY_RF:
+      recoveryRF_indirect_instruction(element);
+      break;
+    case SET_MULTIPROG:
       setMultiprog_instruction(element);
       break;
-    case setAddrCS:
-      setAddrCS_instruction(element);
-      break;
-    case setQuantum:
+    case SET_QUANTUM:
       setQuantum_instruction(element);
       break;
-    case setProcess:
-      setProcess_instruction(element);
+    case SET_ADDR_CS:
+      setAddrCS_instruction(element);
       break;
-    case getPCProcess:
+    case SET_NUM_PROG:
+      setNumProg_instruction(element);
+      break;
+    case EXEC_PROG:
+      executeProg_instruction(element);
+      break;
+    case GET_PC_PROCESS:
+      params_function->param1 = registerTBR + element->result->addr.nTemp;
       getPCProcess_instruction(element);
-      assignReg(element, registerTBR + element->result->addr.nTemp, params_function->param1);
       break;
-    case executeProc:
-      setPCProcess_instruction(element);
-      executeProc_instruction(element);
-      break;
-    case returnMain:
+    case RETURN_MAIN:
       jump(element, 0);
       break;
-    default:
+    default: //Função criado pelo usuário
       storeI(element, memoryInstruction+3, element->addr1->addr.bPointer->memloc);
       jump(element, searchFunction(code, element->addr1->addr.bPointer));
       if(element->result != NULL)
@@ -590,22 +591,23 @@ static int checkNameFunction(char *name){
   switch (keyFromString(name)) {
     case INPUT:
     case OUTPUT:
-    case HDtoMI:
-    case RFtoHD:
-    case HDtoRF:
-    case HDtoMD:
-    case dataToHD:
-    case setMultiprog:
-    case setAddrCS:
-    case executeProc:
-    case setQuantum:
-    case getPCProcess:
-    case returnMain:
-    case setProcess:
-      return 0;
+    case DELAY:
+    case HD_TRANSF_MI:
+    case HD_WRITE:
+    case HD_READ:
+    case SAVE_RF:
+    case RECOVERY_RF:
+    case SET_MULTIPROG:
+    case SET_QUANTUM:
+    case SET_ADDR_CS:
+    case SET_NUM_PROG:
+    case EXEC_PROG:
+    case GET_PC_PROCESS:
+    case RETURN_MAIN:
+      return 0; //Função criada manualmente
       break;
     default:
-      return 1;
+      return 1; //Função criada pelo programador cminus
       break;
   }
 }
@@ -667,21 +669,20 @@ void print_assembly_operation(AssemblyOperation a){
     case moveAO: fprintf(listing, "move"); break;
     case inAO: fprintf(listing, "in"); break;
     case outAO: fprintf(listing, "out"); break;
-    case delayOutAO: fprintf(listing, "delay out"); break;
-    case delayNotOutAO: fprintf(listing, "delay not out"); break;
-    case hdToMIAO: fprintf(listing, "HD to MI"); break;
-    case RFtoHDAO: fprintf(listing, "RF to HD"); break;
-    case HDtoRFAO: fprintf(listing, "HD to RF"); break;
-    case HDtoMDAO: fprintf(listing, "HD to MD"); break;
-    case dataToHDAO: fprintf(listing, "dataToHD"); break;
-    case setMultiprogAO: fprintf(listing, "setMultiprogramming"); break;
-    case setAddrCSAO: fprintf(listing, "setAddrContextSwitch"); break;
-    case execProcessAO: fprintf(listing, "executeProcess"); break;
-    case setQuantumAO: fprintf(listing, "setQuantum"); break;
-    case setPCProcessAO: fprintf(listing, "setPCProcess"); break;
-    case getPCProcessAO: fprintf(listing, "getPCProcess"); break;
-    case setProcessAO: fprintf(listing, "setProcess"); break;
-    default: break;
+    //Instruções adicionadas
+    case delayAO: fprintf(listing, "delay"); break;
+    case hd_transfer_miAO: fprintf(listing, "hd_transfer_mi"); break;
+    case save_rf_hdAO: fprintf(listing, "save_rf_in_hd"); break;
+    case rec_rf_hdAO: fprintf(listing, "rec_rf_from_hd"); break;
+    case save_rf_hd_indAO: fprintf(listing, "save_rf_in_hd_indirect"); break;
+    case rec_rf_hd_indAO: fprintf(listing, "rec_rf_from_hd_indirect"); break;
+    case set_multiprogAO: fprintf(listing, "setMultiprog"); break;
+    case set_quantumAO: fprintf(listing, "setQuantum"); break;
+    case set_addr_csAO: fprintf(listing, "setAddrCS"); break;
+    case set_num_progAO: fprintf(listing, "setNumProg"); break;
+    case exec_progAO: fprintf(listing, "execProg"); break;
+    case get_pc_processAO: fprintf(listing, "getPC_Process"); break;
+    default: fprintf(listing, "ERROR"); break;
   }
 }
 
@@ -803,10 +804,7 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
       fprintf(codefile, "6'd%d, 26'd0", NOP);
       break;
     case hltAO:
-      if(BIOS == TRUE)
-        fprintf(codefile, "6'd%d, 5'd%d, 21'd0", END_BIOS, registerINOUT);
-      else
-        fprintf(codefile, "6'd%d, 5'd%d, 21'd0", HLT, registerINOUT);
+        fprintf(codefile, "6'd%d, 26'd0", HLT);
       break;
     case inAO:
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", IN, assemblyPrint->result->op);
@@ -814,48 +812,41 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
     case outAO:
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", OUT, assemblyPrint->result->op);
       break;
-    case delayOutAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 5'd0, 10'd450, 6'd0", DLY_OUT, assemblyPrint->result->op);
+    case delayAO:
+      fprintf(codefile, "6'd%d, 26'd0", DLY);
       break;
-    case delayNotOutAO:
-      fprintf(codefile, "6'd%d, 10'd0, 10'd450, 6'd0", DLY_NOT_OUT);
+    case hd_transfer_miAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", HD_TRANSFER_MI, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
-    case hdToMIAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", HD_LOAD_INST_MEM, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+    case save_rf_hdAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", SAVE_RF_HD, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
-    case RFtoHDAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", RF_to_HD, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+    case rec_rf_hdAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", REC_RF_HD, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
-    case HDtoRFAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", HD_to_RF, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+    case save_rf_hd_indAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", SAVE_RF_HD_IND, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
-    case HDtoMDAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", HD_to_MD, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+    case rec_rf_hd_indAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", REC_RF_HD_IND, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
-    case dataToHDAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", WRITE_DATA_HD, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+    case set_multiprogAO:
+      fprintf(codefile, "6'd%d, 5'd0, 21'd%d", SET_MP, assemblyPrint->result->op);
       break;
-    case setMultiprogAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_MULTIPROG, assemblyPrint->result->op);
+    case set_quantumAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_QTM, assemblyPrint->result->op);
       break;
-    case setQuantumAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_QUANTUM, assemblyPrint->result->op);
+    case set_addr_csAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_ADDRCS, assemblyPrint->result->op);
       break;
-    case setAddrCSAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_ADDR_CS, assemblyPrint->result->op);
+    case set_num_progAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_NUMPROG, assemblyPrint->result->op);
       break;
-    case setPCProcessAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_PC_PROCESS, assemblyPrint->result->op);
+    case exec_progAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", EXEC_PROGRAM, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
-    case getPCProcessAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", GET_PC_PROCESS, assemblyPrint->result->op);
-      break;
-    case execProcessAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 16'd0", EXEC_PROCESS_X, assemblyPrint->result->op, assemblyPrint->op1->op);
-      break;
-    case setProcessAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_PROCESS, assemblyPrint->result->op);
-    break;
+    case get_pc_processAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", GET_PCPROCESS, assemblyPrint->result->op);
       break;
     default:
       fprintf(listing, "Error");
@@ -884,18 +875,16 @@ void codeGenerationAssembly(AddressQuad code, FILE * codefile){
   List paramList = NULL;
   initializeCodeAssembly();
   params_function = (Param_Funct) malloc(sizeof(Param_Funct));
+  if(SO == TRUE) shiftRegistersSO();
+  else shiftRegistersProg();
   while(element != NULL && !Error){
     switch (element->op) {
       case FunctionOP: //OK
         functionActual = element->addr1->addr.bPointer;
-        if((SO == TRUE) && (strcmp(functionActual->name, "contextSwitch")==0))
-          shiftRegistersContextSwitch();
         initializeRegisterS();
         break;
       case EndFunctionOP: //OK
         exitFunction(element);
-        if((SO == TRUE) && (strcmp(functionActual->name, "contextSwitch")==0))
-          shiftRegistersProg();
         functionActual = NULL;
         break;
       case HaltOP: //OK
@@ -915,18 +904,21 @@ void codeGenerationAssembly(AddressQuad code, FILE * codefile){
         jump(element, element->result->addr.label);
         break;
       case ParamOP: //OK
-        if(functionCall == NULL){
-          functionCall = foundCall(element);
-          if(strcmp(functionCall->name, "HDtoMD") == 0)
+        if(functionCall == NULL){ //Nova função sendo chamada
+          functionCall = foundCall(element); //Determinar a função
+          if(strcmp(functionCall->name, "HD_Read") == 0)
             params_function->key = PARAM2;
           else params_function->key = PARAM1;
-          paramList = functionCall->param->list;
+          paramList = functionCall->param->list; //Guarda a lista de parâmetros
         }
-        if(paramList == NULL){
-          paramSystemCallOrIO(functionCall, element);
-          params_function->key++;
+        if(paramList == NULL){ //Função criada manualmente
+          if(strcmp(functionCall->name, "setMultiprog") != 0){
+            paramSystemCallOrIO(functionCall, element);
+            params_function->key++;
+          }
+          else params_function->param1 = element->addr1->addr.constant;
         }
-        else{
+        else{ //Função criada no próprio código em cminus
           writeParamInMemory(element, paramList->location);
           paramList = paramList->next;
         }

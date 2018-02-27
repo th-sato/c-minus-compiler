@@ -1,206 +1,319 @@
-int inicio;
-int n_process_exec;
-int exec;
-int qtd_regs;
-int tam_vector_CS;
-int CS[100];
+int OK_LCD;
+int ERROR_LCD;
+int OPTION_LCD;
+int CS_LCD;
+int EXECUTE_LCD;
+int EXECUTE_N_LCD;
+int RENAME_LCD;
+int CREATE_LCD;
+int DELETE_LCD;
+int SHOW_LCD;
+int OTHER_NAME_LCD;
+int NOT_FOUND_LCD;
+int tab_inicio; int tab_space_program;
+int exec; int space_to_process; int qtd_processos_ativos;
+int tam_vector_CS; int n_process_exec; int CS[100];
+int startRF; int endRF;
 
 void contextSwitch (){
-  int i; int prox_exec; int stay;
-  setMultiprogramming(0);
+  int i; int stay; int one_process;
+  int pc_process; int prox_exec;
+  setMultiprog(0);
+  pc_process = getPC_Process();
   stay = 0;
-  //Processo terminou?
-  if(getPCProcess() == (CS[exec+5] - 1))
+  one_process = qtd_processos_ativos;
+  if(pc_process == (CS[exec+5]-1)){
     CS[exec + 2] = 0; //Terminou
-  else {
-    //Guardar dados do banco de registradores no HD
-    for(i = 1; i < qtd_regs; i = i+1){
-      RFtoHD(i, CS[exec+6], CS[exec+7] + i);
+    qtd_processos_ativos = qtd_processos_ativos - 1;
+  }
+  else{ //Salvar processo
+    for(i = startRF; i <= endRF; i = i + 1){
+      saveRF_in_HD(i, CS[exec+6], CS[exec+7] + i - startRF);
     }
+    CS[exec] = pc_process;
+  }
+  if(qtd_processos_ativos == 0){
+    setNumProg(0);
+    output(OK_LCD);
+    returnMain();
+  }
+  if(one_process != 1){
+    setNumProg(0);
+    output(CS_LCD);
   }
   //Definir processo a ser executado
   for(i = 0; i < n_process_exec; i = i + 1){
     if(stay == 0){
-      prox_exec = exec + 5;
-      if(prox_exec > tam_vector_CS) exec = 0;
+      prox_exec = exec + space_to_process;
+      if(prox_exec >= tam_vector_CS) exec = 0;
       else exec = prox_exec;
-      if(CS[exec+2] == 1) //Processo em execução
-        stay = 1; //Encontrou um processo para executar
-      else stay = 0; //Não há mais processos para executar
+      if(CS[exec+2] == 1){ //Em execução
+        stay = 1;
+      }
+      else stay = 0; //Terminou a execução
     }
   }
-  if(stay != 0){
-    //Voltar ao banco de registradores antes da troca de contexto
-    for(i = 1; i < qtd_regs; i = i+1){
-      HDtoRF(i, CS[exec+6], CS[exec+7] + i);
+  if(stay == 1){ //Continuar execução do processo
+    setNumProg(CS[exec+1]);
+    if(CS[exec+8] == 1){
+      output(0);
+      CS[exec+8] = 0;
     }
-    setMultiprogramming(1);
-    executeProcess(CS[exec], CS[exec+3], CS[exec+4]); //Executar processo no primeiro vetor
-  }
-  else {
-    output(123);
-    returnMain();
+    else{
+      for(i=startRF; i<=endRF; i=i+1){ //Restaurar registradores
+        recoveryRF(i, CS[exec+6], CS[exec+7] + i - startRF);
+      }
+      if(one_process != 1) delay();
+    }
+    setMultiprog(1);
+    execProgram(CS[exec], CS[exec+3], CS[exec+4]); //Executar processo no primeiro vetor
   }
 }
 
 int findProgram(int program){
-  int num_prog; int space_prog; int i; int j; int aux;
-  num_prog = HDtoMD(0,0);
-  space_prog = HDtoMD(0,1);
-  j = inicio;
-  for(i = 0; i < num_prog; i = i + 1){
-    if(HDtoMD(0,j) == 1){ //Há um programa
-      aux = HDtoMD(0,j+1);
-      if (aux == program)
+  int num_prog; int i; int j; int aux;
+  num_prog = HD_Read(0,0);
+  j = tab_inicio;
+  i = 0;
+  while(i < num_prog){
+    if(HD_Read(0,j) == 1){ //Há um programa
+      i = i + 1;
+      aux = HD_Read(0,j+1);
+      if (aux == program){
         return j;
+      }
     }
-    j = j + space_prog;
+    j = j + tab_space_program;
   }
-  return 111;
+  return NOT_FOUND_LCD;
 }
 
-void loadProgram (int posMI, int program){
+int loadProgram (int posMI, int program){
   int pos; int start; int end; int i; int sector;
   pos = findProgram(program);
-  start = HDtoMD(0, pos+2);
-  end = start + HDtoMD(0, pos+3);
-  sector = i/1024;
+  //Não Encontrou
+  if(pos == NOT_FOUND_LCD){
+    output(NOT_FOUND_LCD);
+    return 0;
+  }
+  //SO
+  if(pos == tab_inicio){
+    output(ERROR_LCD);
+    return 0;
+  }
+  //Encontrou
+  start = HD_Read(0, pos+2);
+  end = start + HD_Read(0, pos+3);
+  sector = start/1024;
   for(i = start; i < end; i = i + 1){
-    HDtoMI(posMI, sector, i - sector*1024);
+    HD_Transfer_MI(posMI, sector, i - sector*1024);
     posMI = posMI + 1;
   }
+  return 1;
 }
 
 void executeNPrograms(){
-  int i; int program; int posMI; int posMD; int pos;
-  int base; int fp; int so_location; int hd;
-  int sector;
+  int i; int base; int sector;
+  int so_location;
+  int posMI; int posMD;
+  int program; int prog_location;
+  exec = 0; //Executar o primeiro processo
   n_process_exec = input();
-  exec = 0;
+  if(n_process_exec < 2){
+    output(ERROR_LCD);
+    returnMain();
+  }
+  output(n_process_exec);
+  qtd_processos_ativos = n_process_exec;
   so_location = findProgram(0);
-  posMI = HDtoMD(0, so_location + 3);
-  posMD = HDtoMD(0, so_location + 4);
-  base = 0;
-  for(i = 0; i < n_process_exec; i = i+1){
+  posMI = HD_Read(0, so_location + 3);
+  posMD = HD_Read(0, so_location + 4);
+  i=0; base=0;
+  while(i<n_process_exec){
     program = input();
     if(program != 0){
-      fp = findProgram(program);
-      if(fp != 111){
-        loadProgram(posMI, program);
-        CS[base]    = 0;                    //PC do processo
-        CS[base+1]  = HDtoMD(0, fp + 1);    //Nome do programa
-        CS[base+2]  = 1;                    //Em execução
-        CS[base+3]  = posMI;                //base MI
-        CS[base+4]  = posMD;                //base MD
-        CS[base+5]  = HDtoMD(0, fp + 3);    //Quantidade de instruções
-        hd = HDtoMD(0, fp+2);
-        sector = hd/1024;
-        CS[base+6]  = sector;               //Setor
-        CS[base+7]  = hd - sector*1024;     //Trilha
-        posMI = posMI + HDtoMD(0, fp + 3);
-        posMD = posMD + HDtoMD(0, fp + 4);
-        base = base + 8;
+      prog_location = findProgram(program);
+      if(prog_location!=NOT_FOUND_LCD){
+        i=i+1;
+        //Carregar programa
+        if(loadProgram(posMI, program) == 1){
+          output(program);
+          output(OK_LCD);
+        }
+        //Dados para a execução do programa
+        CS[base] = 0;                                 //PC do processo
+        CS[base+1] = HD_Read(0, prog_location + 1);   //Nome do programa
+        CS[base+2] = 1;                               //Em execução
+        CS[base+3] = posMI;                           //base MI
+        CS[base+4] = posMD;                           //base MD
+        CS[base+5] = HD_Read(0, prog_location + 3);   //Qtd instruções
+        sector = (HD_Read(0, prog_location + 2))/1024;
+        CS[base+6] = sector;                          //Sector: END
+        CS[base+7] = HD_Read(0, prog_location + 3);   //Track: END
+        CS[base+8] = 1;                               //Primeira vez executado?
+        base = base + space_to_process;
+        posMI = posMI + HD_Read(0, prog_location+3);
+        posMD = posMD + HD_Read(0, prog_location+4);
       }
+      else output(NOT_FOUND_LCD);
     }
+    else output(OTHER_NAME_LCD);
   }
   tam_vector_CS = base;
-  setMultiprogramming(1);
-  executeProcess(CS[exec], CS[exec+3], CS[exec+4]); //Executar processo no primeiro vetor
+  for(i=0; i<tam_vector_CS; i=i+space_to_process){
+    output(CS[i+1]); //Apresentar programas em execução
+  }
+  setNumProg(CS[exec+1]);
+  output(0);
+  setMultiprog(1);
+  execProgram(CS[exec], CS[exec+3], CS[exec+4]);
 }
 
 void executeProgram(int program){
-  int posMI; int posMD; int so_location;
+  int posMI_SO; int posMD_SO; int so_location;
   so_location = findProgram(0);
-  posMI = HDtoMD(0, so_location + 3);
-  posMD = HDtoMD(0, so_location + 4);
-  loadProgram(posMI, program);
-  executeProcess(0, posMI, posMD);
+  posMI_SO = HD_Read(0, so_location + 3);
+  posMD_SO = HD_Read(0, so_location + 4);
+  if(loadProgram(posMI_SO, program) == 1){
+    setNumProg(program);
+    output(0);
+    execProgram(0, posMI_SO, posMD_SO);
+  }
+}
+
+int createProgram(){
+  int num_prog; int prox_pos;
+  int instruction; int name; int i;
+  int sector; int track;
+  num_prog = HD_Read(0,0);
+  prox_pos = HD_Read(0,2);
+  i = tab_inicio;
+  while(HD_Read(0,i) == 1){
+    i = i + tab_space_program;
+  }
+  name = input();                 //Nome do programa
+  while(findProgram(name) != NOT_FOUND_LCD) { //Executa até que o programa tenha um nome novo
+    output(OTHER_NAME_LCD);         //Escolha outro nome
+    name = input();                 //Nome do programa
+  }
+  output(0); //O nome é válido
+  //Preencher FAT
+  HD_Write(1, 0, i);              //Usado ou não
+  HD_Write(name, 0, i+1);         //Nome do programa
+  HD_Write(prox_pos, 0, i+2);     //Início do programa
+  HD_Write(4, 0, i+3);            //Quantidade de instruções
+  HD_Write(0, 0, i+4);            //Tamanho da memória de dados
+  //Adicionar instruções
+  instruction = input(); //Entrar com uma instrução com até 16 bits
+  instruction = instruction * 65536;
+  sector = prox_pos/1024;
+  track = prox_pos - sector*1024;
+  HD_Write(instruction, sector, track); //INPUT: 6'd12, 5'd6, 5'd0
+  instruction = input(); //Entrar com uma instrução com até 16 bits
+  instruction = instruction * 65536;
+  track = (prox_pos+1) - sector*1024;
+  HD_Write(instruction, sector, track); //OUTPUT: 6'd13, 5'd6, 5'd0
+  instruction = input(); //Entrar com uma instrução com até 16 bits
+  instruction = instruction * 65536;
+  track = (prox_pos+2) - sector*1024;
+  HD_Write(instruction, sector, track); //DELAY: 6'd14, 10'd0
+  instruction = input(); //Entrar com uma instrução com até 16 bits
+  instruction = instruction * 65536;
+  track = (prox_pos+3) - sector*1024;
+  HD_Write(instruction, sector, track); //HALT: 6'd11, 10'd0
+  //Incrementar quantidade de programas
+  HD_Write(num_prog+1, 0, 0);     //Atualizar número de programas
+  HD_Write(prox_pos+1024, 0, 2);  //Atualizar próxima posição para escrita
+  return OK_LCD;
+}
+
+void showPrograms(){
+  int num_prog; int space_prog; int i; int j; int aux;
+  num_prog = HD_Read(0,0);
+  j = tab_inicio;
+  i = 0;
+  while(i < num_prog){
+    if(HD_Read(0,j) == 1){ //Há um programa
+      i = i + 1;
+      output(HD_Read(0,j+1));
+    }
+    j = j + tab_space_program;
+  }
 }
 
 int deleteProgram(int program){
   int j; int num_prog;
-  num_prog = HDtoMD(0,0);
+  num_prog = HD_Read(0,0);
   j = findProgram(program);
-  if(j == 111) return 111;
-  if(j != 0){
-    dataToHD(0, 0, j); //Apagar do HD
-    dataToHD(num_prog - 1, 0, 0);
-    return 123;
-  }
+  if(j == NOT_FOUND_LCD) return NOT_FOUND_LCD;
+  if(j == tab_inicio) return ERROR_LCD;
+  //Programa válido
+  HD_Write(0, 0, j); //Apagar do HD
+  HD_Write(num_prog - 1, 0, 0); //Reduzir a quantidade de programas
+  return OK_LCD;
 }
 
-void createProgram(){
-  int num_prog; int space_prog; int prox_pos; int instruction;
-  int name; int i;
-  num_prog = HDtoMD(0,0);
-  space_prog = HDtoMD(0,1);
-  prox_pos = HDtoMD(0,2);
-  i = 3;
-  while(HDtoMD(0,i) == 1){
-    i = i + space_prog;
-  }
-  name = input();                 //Nome do programa
-
-  //Preencher FAT
-  dataToHD(1, 0, i);              //Usado ou não
-  dataToHD(name, 0, i+1);         //Nome do programa
-  dataToHD(3, 0, i+2);            //Quantidade de instruções
-  dataToHD(0, 0, i+3);            //Tamanho da memória de dados
-
-  //Adicionar instruções
-  instruction = input(); //Entrar com uma instrução com até 16 bits
-  instruction = instruction * 65536;
-  dataToHD(instruction, prox_pos);
-  instruction = input(); //Entrar com uma instrução com até 16 bits
-  instruction = instruction * 65536;
-  dataToHD(instruction, prox_pos+1);
-  instruction = instruction * 65536;
-  dataToHD(instruction, prox_pos+2);
-
-  //Incrementar quantidade de programas
-  dataToHD(num_prog+1, 0, 0);     //Atualizar número de programas
-  dataToHD(prox_pos*1024, 0, 2);  //Atualizar próxima posição para escrita
-}
-
-void renameProgram(int program){
+int renameProgram(int program){
   int j; int num_prog; int new_name;
-  num_prog = HDtoMD(0,0);
+  num_prog = HD_Read(0,0);
   j = findProgram(program);
-  if(j == 111) return 111;
-  if(j != 0){
+  if(j == NOT_FOUND_LCD) return NOT_FOUND_LCD; //Não encontrou
+  if(j == tab_inicio) return ERROR_LCD; //SO
+  else {
     new_name = input();
-    dataToHD(new_name, 0, j+1); //Renomear
-    return 123;
+    if(findProgram(new_name) == NOT_FOUND_LCD){
+      HD_Write(new_name, 0, j+1); //Renomear
+      return OK_LCD;
+    }
+    else{
+      return OTHER_NAME_LCD;
+    }
   }
 }
 
 /* PROMPT */
 void main(){
   int option; int program;
-  inicio = 3;
-  qtd_regs = 22;
-  setAddrContextSwitch(1);
+  setMultiprog(0);
+  OK_LCD = 65535; ERROR_LCD = 65534; OPTION_LCD = 65533;	CS_LCD = 65532;
+  EXECUTE_LCD = 65531; EXECUTE_N_LCD = 65530; RENAME_LCD = 65529;
+  CREATE_LCD = 65528; DELETE_LCD = 65527; SHOW_LCD = 65526;
+  OTHER_NAME_LCD = 65525; NOT_FOUND_LCD = 65524;
+  startRF = 6; endRF = 19;
+  setNumProg(0);
+  setAddrCS(1);
   setQuantum(50);
+  tab_inicio = 3; tab_space_program = 5;
+  space_to_process = 9;
   while (1 == 1){
+    output(OPTION_LCD);
     option = input();
     if(option == 1){ //Executar um programa
+      output(EXECUTE_LCD);
       program = input();
-      loadProgram(program);
       executeProgram(program);
     }
     else if(option == 2){ //Executar n programas
+      output(EXECUTE_N_LCD);
       executeNPrograms();
     }
     else if(option == 3){ //Renomear um programa
+      output(RENAME_LCD);
       program = input();
       output(renameProgram(program));
     }
     else if(option == 4){ //Criar um programa
-      createProgram();
+      output(CREATE_LCD);
+      output(createProgram());
     }
     else if(option == 5){ //Deletar um programa
+      output(DELETE_LCD);
       program = input();
       output(deleteProgram(program));
+    }
+    else if(option == 6){
+      output(SHOW_LCD);
+      showPrograms();
     }
   }
 }

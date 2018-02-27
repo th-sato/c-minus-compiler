@@ -1,29 +1,27 @@
 /*
   Testar as seguintes funções:
-  * HDtoMI: OK
-  * RFtoHD: OK
-  * HDtoRF: OK
-  * HDtoMD: OK
-  * dataToHD: OK
-  * setMultiprogramming:
-  * setAddrContextSwitch:
-  * setQuantum:
-  * getPCProcess:
-  * executeProcess:
-  * setProcess:
+  * input: OK
+  * output: OK
+  * delay: OK
+  * HD_Transfer_MI: OK
+  * HD_Write
+  * HD_Read
+  * saveRF_in_HD
+  * recoveryRF
+  * setMultiprog:
+  * setQuantum: OK
+  * setAddrCS: OK
+  * setNumProg
+  * execProgram
+  * getPC_Process
+  * returnMain
 */
 
-void teste(){
-  int a;
-  a = 4;
-}
 
 void main(void){
-  int a; int b; int c;
-  a = a + b + c;
-  b = a + c;
-  a = HDtoMD(3, 4);
-  setProcess(a);
-  returnMain();
-  teste();
+  int CS[100]; int exec;
+  setMultiprog(0);
+  execProgram(0, 1, 2);
+  setMultiprog(1);
+  execProgram(CS[exec], CS[exec+3], CS[exec+4]);
 }

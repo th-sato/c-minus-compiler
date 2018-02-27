@@ -7,16 +7,13 @@
 #include "cgen.h"
 
 #define registerZero 0 //Registrador com valor constante zero
-#define registerTBR_Prog 1 //Início dos registradores do tipo T
-#define registerSBR_Prog 11 //Início dos registradores do tipo S
-#define registerINOUT 20 //registrador para impressão
-#define registerRV 21 //Registrador para guardar valor de retorno
-#define size_registerS_programs 10
-
-//Context Switch
-#define registerTBR_CS 22
-#define registerSBR_CS 26
-#define size_registerS_CS 6
+#define registerOUT 6 //registrador para impressão
+#define registerRV 7 //Registrador para guardar valor de retorno
+#define registerTBR_Prog 8 //Início dos registradores do tipo T
+#define registerSBR_Prog 14 //Início dos registradores do tipo S
+#define registerTBR_SO 20 //Início dos registradores do tipo T
+#define registerSBR_SO 26 //Início dos registradores do tipo S
+#define num_registers_type 6 //Número de registradores para cada tipo
 
 #define ALU 0
 #define LW 1
@@ -32,25 +29,24 @@
 #define HLT 11
 #define IN 12
 #define OUT 13
-#define DLY_OUT 14
-#define DLY_NOT_OUT 15
-#define END_BIOS 16
-#define HD_LOAD_INST_MEM 17
-#define RF_to_HD 18
-#define HD_to_RF 19
-#define HD_to_MD 20
-#define WRITE_DATA_HD 21
-#define SET_MULTIPROG 22
-#define SET_QUANTUM 23
-#define SET_ADDR_CS 24
-#define SET_PC_PROCESS 25
-#define GET_PC_PROCESS 26
-#define EXEC_PROCESS_X 27
-#define SET_PROCESS 28
+#define DLY 14
+//Novas instruções
+#define HD_TRANSFER_MI 15
+#define SAVE_RF_HD 16
+#define REC_RF_HD 17
+#define SAVE_RF_HD_IND 18
+#define REC_RF_HD_IND 19
+#define SET_MP 20
+#define SET_QTM 21
+#define SET_ADDRCS 22
+#define SET_NUMPROG 23
+#define EXEC_PROGRAM 24
+#define GET_PCPROCESS 25
 
-typedef enum {OTHER, MAIN, INPUT, OUTPUT, HDtoMI, RFtoHD, HDtoRF, HDtoMD,
-              dataToHD, setMultiprog, setAddrCS, executeProc, setQuantum,
-              getPCProcess, returnMain, setProcess} Functions;
+typedef enum {OTHER, MAIN, INPUT, OUTPUT, DELAY, HD_TRANSF_MI, HD_WRITE,
+              HD_READ, SAVE_RF, RECOVERY_RF, SET_MULTIPROG, SET_QUANTUM,
+              SET_ADDR_CS, SET_NUM_PROG, EXEC_PROG, GET_PC_PROCESS,
+              RETURN_MAIN} Functions;
 typedef enum {PARAM1, PARAM2, PARAM3} POS_Key;
 //typedef enum {POS_MI, SECTOR, TRACK} POS_Key;
 
@@ -72,18 +68,19 @@ static functionMap functionName[]= {
   {"main", MAIN},
   {"input", INPUT},
   {"output", OUTPUT},
-  {"HDtoMI", HDtoMI},
-  {"RFtoHD", RFtoHD},
-  {"HDtoRF", HDtoRF},
-  {"HDtoMD", HDtoMD},
-  {"dataToHD", dataToHD},
-  {"setMultiprogramming", setMultiprog},
-  {"setAddrContextSwitch", setAddrCS},
-  {"executeProcess", executeProc},
-  {"setQuantum", setQuantum},
-  {"getPCProcess", getPCProcess},
-  {"returnMain", returnMain},
-  {"setProcess", setProcess}
+  {"delay", DELAY},
+  {"HD_Transfer_MI", HD_TRANSF_MI},
+  {"HD_Write", HD_WRITE},
+  {"HD_Read", HD_READ},
+  {"saveRF_in_HD", SAVE_RF},
+  {"recoveryRF", RECOVERY_RF},
+  {"setMultiprog", SET_MULTIPROG},
+  {"setQuantum", SET_QUANTUM},
+  {"setAddrCS", SET_ADDR_CS},
+  {"setNumProg", SET_NUM_PROG},
+  {"execProgram", EXEC_PROG},
+  {"getPC_Process", GET_PC_PROCESS},
+  {"returnMain", RETURN_MAIN}
 };
 
 static int NKEYS = (sizeof(functionName)/sizeof(functionMap));

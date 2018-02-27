@@ -1,22 +1,25 @@
 /* BIOS */
 
 int ERRO; // Considera inicialmente que há erro
+int OK_LCD;
+int ERROR_LCD;
 
 void confirmacao(){
   int conf;
   conf = input();
   if(conf == 1){
-    output(123);
+    output(OK_LCD);
     ERRO = 0;
   }
+  else output(ERROR_LCD);
 }
 
-void displaySETEsegmentos(){ // Apresentar um valor no display de 7 segmentos
+void display7seg(){ // Apresentar um valor no display de 7 segmentos
   output(3);
   confirmacao();
 }
 
-void entrada(){ //
+void entrada(){
   int n;
   n = input();
   output(n);
@@ -35,23 +38,40 @@ void processador(){ // Apresentar resultado da soma
   confirmacao();
 }
 
-void hd(){ // Puxar instrução do HD
+void hd_test(){
+  HD_Write(10, 15, 1023);
+  output(HD_Read(15, 1023));
+  confirmacao();
+}
+
+void hd_instr(){ // Puxar instrução do HD
   int i; int j;
   j = 0;
-  for(i = 1024; i < 1915; i = i+1){
-    HDtoMI(j, 0, 1024+j);
-    j = j +1;
+  for(i = 0; i < 2048; i = i+1){
+    if(i < 1024)
+      HD_Transfer_MI(i, 1, i);
+    else{
+      HD_Transfer_MI(i, 2, j);
+      j = j + 1;
+    }
   }
 }
 
 void main(void){
+  setMultiprog(0);
+  delay();
+  OK_LCD = 65535;
+  ERROR_LCD = 65534;
   ERRO = 1;
-  while(ERRO == 1) displaySETEsegmentos();
+  while(ERRO == 1) display7seg();
   ERRO = 1;
   while(ERRO == 1) entrada();
   ERRO = 1;
   while(ERRO == 1) memoriaDeDados();
   ERRO = 1;
   while(ERRO == 1) processador();
-  hd();
+  ERRO = 1;
+  while(ERRO == 1) hd_test();
+  hd_instr();
+  output(OK_LCD);
 }

@@ -33,7 +33,7 @@ static void fillElementFAT(int i){
     while(t->next != NULL) t = t->next;
     aux = (Program) malloc(sizeof(struct program));
     aux->usage = 1;
-    aux->name = i;
+    aux->name = i - 1;
     aux->inicio = 1024*(i + 1);
     aux->next = NULL;
     t->next = aux;
@@ -139,7 +139,7 @@ static void compilerPrograms (int N, FILE * codefile){ //Quantidade de programas
                         "potencia", "selectionSort"};
   for(i = 0; i < N; i++){
     fprintf(codefile, "//Algorithm: %s\n\n", name[i]);
-    reexecuteCompiler(i+1);
+    reexecuteCompiler(i+2);
     strcpy(file, "Algoritmos/");
     strcat(file, name[i]);
     strcat(file, ".cm");
@@ -151,7 +151,9 @@ static void compilerPrograms (int N, FILE * codefile){ //Quantidade de programas
 int main( int argc, char * argv[] )
 {
   FILE * codefile;
-  char fileRead[120], fileWrite[120];
+  char fileRead[120];
+  char * fileWrite;
+  int fnlen;
   listing = stdout; /* send listing to screen */
   initializeFAT();
   switch (argc) {
@@ -164,25 +166,39 @@ int main( int argc, char * argv[] )
       fclose(codefile);
       BIOS = FALSE;
       //Gerar código do Sistema Operacional
-      SO = TRUE;
+      /*SO = TRUE;
       reexecuteCompiler(0);
       codefile = writeToFile("SO/SO.sato");
       fprintf(codefile, "//SO\n\n");
       compilerSato("SO/SO.cm", codefile);
       //fclose(codefile);
+      SO = FALSE;*/
+      SO = TRUE;
+      reexecuteCompiler(0);
+      codefile = writeToFile("Algoritmos/hd.sato");
+      fprintf(codefile, "//SO\n\n");
+      compilerSato("SO/SO.cm", codefile);
+      fprintf(codefile, "\n\n\n\n");
+      //fclose(codefile);
       SO = FALSE;
       //Gerar código do HD
-      codefile = writeToFile("Algoritmos/hd.sato");
       compilerPrograms(10, codefile);
       FATinHD(codefile);
       //fclose(codefile);
       break;
     case 2:
+      //Arquivo de leitura
       strcpy(fileRead, argv[1]);
-      strcpy(fileWrite, argv[1]);
-      strcat(fileRead, ".cm");
+      if(strchr(fileRead, '.') == NULL)
+        strcat(fileRead,".cm");
+      //Arquivo de escrita
+      fnlen = strcspn(fileRead, ".");
+      fileWrite = (char*)calloc(fnlen+6, sizeof(char));
+      strncpy(fileWrite, fileRead, fnlen);
       strcat(fileWrite, ".sato");
+      //Abrir arquivo de escrita
       codefile = writeToFile(fileWrite);
+      //Leitura do arquivo de escrita e geração do código objeto
       compilerSato(fileRead, codefile);
       fclose(codefile);
       break;

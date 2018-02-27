@@ -5,7 +5,7 @@
 #include "globals.h"
 #include "symtab.h"
 
-#define number_temp 10
+#define number_temp 6
 
 typedef enum {BucketL, TempAddr, TempValue, Label, Const} AddressKind;
 
@@ -13,7 +13,7 @@ typedef enum {FunctionOP, EndFunctionOP, HaltOP, CallOP, LabelOP, IF_fOP, GotoOP
 
 typedef enum {regT, immediateT, addressIT} OperatingType;
 
-typedef enum {sumAO, sumiAO, subAO, subiAO, multAO, divAO, lwAO, lrAO, loadiAO, swAO, swrAO, andAO, orAO, xorAO, norAO, notAO, sltAO, sleAO, sgtAO, sgeAO, eqAO, neqAO, srlAO, sllAO, beqAO, bnqAO, jAO, jrAO, jalAO, nopAO, hltAO, moveAO, inAO, outAO, delayOutAO, delayNotOutAO, hdToMIAO, RFtoHDAO, HDtoRFAO, HDtoMDAO, dataToHDAO, setMultiprogAO, setAddrCSAO, execProcessAO, setQuantumAO, setPCProcessAO, getPCProcessAO, setProcessAO} AssemblyOperation;
+typedef enum {sumAO, sumiAO, subAO, subiAO, multAO, divAO, lwAO, lrAO, loadiAO, swAO, swrAO, andAO, orAO, xorAO, norAO, notAO, sltAO, sleAO, sgtAO, sgeAO, eqAO, neqAO, srlAO, sllAO, beqAO, bnqAO, jAO, jrAO, jalAO, nopAO, hltAO, moveAO, inAO, outAO, delayAO, hd_transfer_miAO,  save_rf_hdAO, rec_rf_hdAO, save_rf_hd_indAO, rec_rf_hd_indAO, set_multiprogAO, set_quantumAO, set_addr_csAO, set_num_progAO, exec_progAO, get_pc_processAO} AssemblyOperation;
 
 typedef struct OperatingT
   { OperatingType type;

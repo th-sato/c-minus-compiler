@@ -71,20 +71,21 @@ static void insertionOfProcessorFunctions(){
   //IN OUT
   st_insert("input", false, "Global", Function, Integer, -1, -1);
   st_insert("output", false, "Global", Function, Void, -1, -1);
+  st_insert("delay", false, "Global", Function, Void, -1, -1);
   //HD
-  st_insert("HDtoMI", false, "Global", Function, Void, -1, -1);
-  st_insert("HDtoRF", false, "Global", Function, Void, -1, -1);
-  st_insert("RFtoHD", false, "Global", Function, Void, -1, -1);
-  st_insert("HDtoMD", false, "Global", Function, Integer, -1, -1);
-  st_insert("dataToHD", false, "Global", Function, Void, -1, -1);
+  st_insert("HD_Transfer_MI", false, "Global", Function, Void, -1, -1);
+  st_insert("HD_Write", false, "Global", Function, Void, -1, -1);
+  st_insert("HD_Read", false, "Global", Function, Integer, -1, -1);
+  st_insert("saveRF_in_HD", false, "Global", Function, Void, -1, -1);
+  st_insert("recoveryRF", false, "Global", Function, Void, -1, -1);
   //Context Switch
+  st_insert("setMultiprog", false, "Global", Function, Void, -1, -1);
+  st_insert("setQuantum", false, "Global", Function, Void, -1, -1);
+  st_insert("setAddrCS", false, "Global", Function, Void, -1, -1);
+  st_insert("setNumProg", false, "Global", Function, Void, -1, -1);
+  st_insert("execProgram", false, "Global", Function, Void, -1, -1);
+  st_insert("getPC_Process", false, "Global", Function, Integer, -1, -1);
   st_insert("returnMain", false, "Global", Function, Void, -1, -1);
-  st_insert("setMultiprogramming", false, "Global", Function, Void, -1, -1);
-  st_insert("setAddrContextSwitch", false, "Global", Function, Void, -1, -1);
-  st_insert("executeProcess", false, "Global", Function, Void, -1, -1);
-  st_insert("setQuantum", false, "Global", Function, Integer, -1, -1);
-  st_insert("getPCProcess", false, "Global", Function, Integer, -1, -1);
-  st_insert("setProcess", false, "Global", Function, Void, -1, -1);
 }
 
 static void insertNode( TreeNode * t) //Preencher tabela de símbolos
