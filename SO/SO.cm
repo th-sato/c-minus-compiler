@@ -47,27 +47,27 @@ void contextSwitch (){
       prox_exec = exec + space_to_process;
       if(prox_exec >= tam_vector_CS) exec = 0;
       else exec = prox_exec;
-      if(CS[exec+2] == 1){ //Em execução
+      if(CS[exec+2] == 1) //Em execução
         stay = 1;
-      }
       else stay = 0; //Terminou a execução
     }
   }
   if(stay == 1){ //Continuar execução do processo
     setNumProg(CS[exec+1]);
-    if(CS[exec+8] == 1){
+    if(CS[exec+8] == 1){ //Primeira vez a ser executado
       output(0);
       CS[exec+8] = 0;
     }
     else{
-      for(i=startRF; i<=endRF; i=i+1){ //Restaurar registradores
+      for(i = startRF; i <= endRF; i = i+1){ //Restaurar registradores
         recoveryRF(i, CS[exec+6], CS[exec+7] + i - startRF);
       }
       if(one_process != 1) delay();
     }
     setMultiprog(1);
-    execProgram(CS[exec], CS[exec+3], CS[exec+4]); //Executar processo no primeiro vetor
+    execProgram(CS[exec], CS[exec+3], CS[exec+4]);
   }
+  returnMain();
 }
 
 int findProgram(int program){
@@ -300,6 +300,7 @@ void main(){
     else if(option == 3){ //Renomear um programa
       output(RENAME_LCD);
       program = input();
+      output(program);
       output(renameProgram(program));
     }
     else if(option == 4){ //Criar um programa

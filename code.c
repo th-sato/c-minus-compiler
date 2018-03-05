@@ -161,7 +161,6 @@ static void if_instruction(AddressQuadElement instruction){
 
 static void in_instruction(AddressQuadElement instruction, int regPos){
   addAssemblyElement(instruction, createElement(inAO, regOperating(regPos), NULL, NULL));
-  addAssemblyElement(instruction, createElement(delayAO, NULL, NULL, NULL));
 }
 
 static void out_instruction(AddressQuadElement instruction){
