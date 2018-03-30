@@ -83,7 +83,7 @@ static void insertionOfProcessorFunctions(){
   st_insert("setQuantum", false, "Global", Function, Void, -1, -1);
   st_insert("setAddrCS", false, "Global", Function, Void, -1, -1);
   st_insert("setNumProg", false, "Global", Function, Void, -1, -1);
-  st_insert("execProgram", false, "Global", Function, Void, -1, -1);
+  st_insert("execProcess", false, "Global", Function, Void, -1, -1);
   st_insert("getPC_Process", false, "Global", Function, Integer, -1, -1);
   st_insert("returnMain", false, "Global", Function, Void, -1, -1);
 }

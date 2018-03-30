@@ -65,7 +65,7 @@ void contextSwitch (){
       if(one_process != 1) delay();
     }
     setMultiprog(1);
-    execProgram(CS[exec], CS[exec+3], CS[exec+4]);
+    execProcess(CS[exec], CS[exec+3], CS[exec+4]);
   }
   returnMain();
 }
@@ -166,7 +166,7 @@ void executeNPrograms(){
   setNumProg(CS[exec+1]);
   output(0);
   setMultiprog(1);
-  execProgram(CS[exec], CS[exec+3], CS[exec+4]);
+  execProcess(CS[exec], CS[exec+3], CS[exec+4]);
 }
 
 void executeProgram(int program){
@@ -177,7 +177,7 @@ void executeProgram(int program){
   if(loadProgram(posMI_SO, program) == 1){
     setNumProg(program);
     output(0);
-    execProgram(0, posMI_SO, posMD_SO);
+    execProcess(0, posMI_SO, posMD_SO);
   }
 }
 

@@ -217,8 +217,8 @@ static void getPCProcess_instruction(AddressQuadElement instruction){
   addAssemblyElement(instruction, createElement(get_pc_processAO, regOperating(params_function->param1), NULL, NULL));
 }
 
-static void executeProg_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(exec_progAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
+static void executeProc_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(exec_procAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
 }
 
 static void fillParameters(Operating paramOutput, AddressQuadElement element){
@@ -483,7 +483,7 @@ static void paramSystemCallOrIO(BucketList functionCall, AddressQuadElement elem
     case HD_READ:
     case SAVE_RF:
     case RECOVERY_RF:
-    case EXEC_PROG:
+    case EXEC_PROC:
       fillParameters(paramOutput, element);
       break;
     case SET_MULTIPROG:
@@ -544,8 +544,8 @@ static void systemCallOrIO(AddressQuad code, AddressQuadElement element){
     case SET_NUM_PROG:
       setNumProg_instruction(element);
       break;
-    case EXEC_PROG:
-      executeProg_instruction(element);
+    case EXEC_PROC:
+      executeProc_instruction(element);
       break;
     case GET_PC_PROCESS:
       params_function->param1 = registerTBR + element->result->addr.nTemp;
@@ -600,7 +600,7 @@ static int checkNameFunction(char *name){
     case SET_QUANTUM:
     case SET_ADDR_CS:
     case SET_NUM_PROG:
-    case EXEC_PROG:
+    case EXEC_PROC:
     case GET_PC_PROCESS:
     case RETURN_MAIN:
       return 0; //Função criada manualmente
@@ -679,7 +679,7 @@ void print_assembly_operation(AssemblyOperation a){
     case set_quantumAO: fprintf(listing, "setQuantum"); break;
     case set_addr_csAO: fprintf(listing, "setAddrCS"); break;
     case set_num_progAO: fprintf(listing, "setNumProg"); break;
-    case exec_progAO: fprintf(listing, "execProg"); break;
+    case exec_procAO: fprintf(listing, "execProc"); break;
     case get_pc_processAO: fprintf(listing, "getPC_Process"); break;
     default: fprintf(listing, "ERROR"); break;
   }
@@ -841,8 +841,8 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
     case set_num_progAO:
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", SET_NUMPROG, assemblyPrint->result->op);
       break;
-    case exec_progAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", EXEC_PROGRAM, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+    case exec_procAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 5'd%d, 11'd0", EXEC_PROCESS, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
       break;
     case get_pc_processAO:
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", GET_PCPROCESS, assemblyPrint->result->op);

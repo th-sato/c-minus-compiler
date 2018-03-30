@@ -40,12 +40,12 @@
 #define SET_QTM 21
 #define SET_ADDRCS 22
 #define SET_NUMPROG 23
-#define EXEC_PROGRAM 24
+#define EXEC_PROCESS 24
 #define GET_PCPROCESS 25
 
 typedef enum {OTHER, MAIN, INPUT, OUTPUT, DELAY, HD_TRANSF_MI, HD_WRITE,
               HD_READ, SAVE_RF, RECOVERY_RF, SET_MULTIPROG, SET_QUANTUM,
-              SET_ADDR_CS, SET_NUM_PROG, EXEC_PROG, GET_PC_PROCESS,
+              SET_ADDR_CS, SET_NUM_PROG, EXEC_PROC, GET_PC_PROCESS,
               RETURN_MAIN} Functions;
 typedef enum {PARAM1, PARAM2, PARAM3} POS_Key;
 //typedef enum {POS_MI, SECTOR, TRACK} POS_Key;
@@ -78,7 +78,7 @@ static functionMap functionName[]= {
   {"setQuantum", SET_QUANTUM},
   {"setAddrCS", SET_ADDR_CS},
   {"setNumProg", SET_NUM_PROG},
-  {"execProgram", EXEC_PROG},
+  {"execProcess", EXEC_PROC},
   {"getPC_Process", GET_PC_PROCESS},
   {"returnMain", RETURN_MAIN}
 };

@@ -87,10 +87,7 @@ Arquivo ".sato": código-objeto.
       A variável "a" recebe o valor da entrada.
     2) output(a);
       A variável "a" é apresentada no display LCD.
-    3) delay(valor);
-      * "valor" deve ser um imediato.
-      * "valor" determina a quantidade de clocks que ficará ocioso.
-      * a troca de contexto não funciona durante o delay.
+    3) delay();
     INSTRUÇÕES COM O HD:
       * sector: 4 bits (0 a 15).
       * track: 10 bits (0 a 1023).
@@ -115,8 +112,8 @@ Arquivo ".sato": código-objeto.
       Define o valor do endereço de troca de contexto.
     12) setNumProg(valor);
       Define o valor para aparecer no display LCD.
-    13) execProgram(novoPC, shiftMI, shiftMD);
-      Executa o programa que está na memória de instruções.
+    13) execProcess(novoPC, shiftMI, shiftMD);
+      Executa o processo que já está na memória de instruções.
     14) a = getPC_Process();
       Guarda o último endereço do processo para continuar sua execução.
     15) returnMain();

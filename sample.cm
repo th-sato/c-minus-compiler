@@ -12,26 +12,13 @@
   * setQuantum: OK
   * setAddrCS: OK
   * setNumProg
-  * execProgram
+  * execProcess
   * getPC_Process
   * returnMain
 */
 
-int fatorial (int num){
-    int cont;
-    int resultado;
-    cont = 1;
-    resultado = 1;
-    while(cont <= num){
-        resultado = resultado * cont;
-        cont = cont + 1;
-    }
-    return resultado;
-}
-
 void main(void){
-    int n;
-    int exec; int CS[100];
-    n = input();
-    output(fatorial(n));
+  int CS[100];
+  int exec;
+  execProcess(CS[exec], CS[exec+3], CS[exec+4]);
 }
