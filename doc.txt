@@ -4,16 +4,16 @@
 Arquivo ".cm": código em cminus.
 Arquivo ".sato": código-objeto.
 --> Para adicionar funções no compilador, altere os seguintes arquivos:
-  1) analyze.c  --> insertionOfProcessorFunctions()
+  1) analyze.c  --> insertionOfProcessorFunctions() OK
   2) code.c     --> criar função para a instrução
                 --> systemCallOrIO()
                 --> paramSystemCallOrIO()
                 --> checkNameFunction() OK
                 --> print_assembly_operation() ok
                 --> print_instruction() ok
-  3) code.h     --> Funtions    --> typedef enum
-                --> FunctionMap --> functionName []
-  4) cgen.h     --> AssemblyOperation --> typedef enum
+  3) code.h     --> Funtions    --> typedef enum OK
+                --> FunctionMap --> functionName [] OK
+  4) cgen.h     --> AssemblyOperation --> typedef enum OK
 -------------------------------------------------------------------------------------------------
 ----------------------------- EXPLICAÇÃO DOS ARQUIVOS DO COMPILADOR -----------------------------
 -------------------------------------------------------------------------------------------------
