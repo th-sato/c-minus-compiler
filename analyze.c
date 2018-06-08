@@ -86,6 +86,9 @@ static void insertionOfProcessorFunctions(){
   st_insert("execProcess", false, "Global", Function, Void, -1, -1);
   st_insert("getPC_Process", false, "Global", Function, Integer, -1, -1);
   st_insert("returnMain", false, "Global", Function, Void, -1, -1);
+  //Redes
+  st_insert("receive", false, "Global", Function, Integer, -1, -1);
+  st_insert("send", false, "Global", Function, Void, -1, -1);
 }
 
 static void insertNode( TreeNode * t) //Preencher tabela de símbolos

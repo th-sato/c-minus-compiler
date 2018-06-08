@@ -484,6 +484,7 @@ static void paramSystemCallOrIO(BucketList functionCall, AddressQuadElement elem
     case SAVE_RF:
     case RECOVERY_RF:
     case EXEC_PROC:
+    case SEND_DATA:
       fillParameters(paramOutput, element);
       break;
     case SET_MULTIPROG:
@@ -493,7 +494,8 @@ static void paramSystemCallOrIO(BucketList functionCall, AddressQuadElement elem
       params_function->param1 = useRegisterS();
       assignReg(element, params_function->param1, paramOutput->op);
       break;
-    /*case GET_PC_PROCESS:
+    /*case RECEIVE_DATA:
+    case GET_PC_PROCESS:
     case RETURN_MAIN:
       break;*/
     default:
@@ -554,6 +556,12 @@ static void systemCallOrIO(AddressQuad code, AddressQuadElement element){
     case RETURN_MAIN:
       jump(element, 0);
       break;
+    case SEND_DATA:
+
+      break;
+    case RECEIVE_DATA:
+
+      break;
     default: //Função criado pelo usuário
       storeI(element, memoryInstruction+3, element->addr1->addr.bPointer->memloc);
       jump(element, searchFunction(code, element->addr1->addr.bPointer));
@@ -603,10 +611,12 @@ static int checkNameFunction(char *name){
     case EXEC_PROC:
     case GET_PC_PROCESS:
     case RETURN_MAIN:
+    case SEND_DATA:
+    case RECEIVE_DATA:
       return 0; //Função criada manualmente
       break;
     default:
-      return 1; //Função criada pelo programador cminus
+      return 1; //Funções do programa
       break;
   }
 }
@@ -681,6 +691,8 @@ void print_assembly_operation(AssemblyOperation a){
     case set_num_progAO: fprintf(listing, "setNumProg"); break;
     case exec_procAO: fprintf(listing, "execProc"); break;
     case get_pc_processAO: fprintf(listing, "getPC_Process"); break;
+    case sendAO: fprintf(listing, "send"); break;
+    case receiveAO: fprintf(listing, "receive"); break;
     default: fprintf(listing, "ERROR"); break;
   }
 }
@@ -846,6 +858,12 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
       break;
     case get_pc_processAO:
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", GET_PCPROCESS, assemblyPrint->result->op);
+      break;
+    case sendAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 16'd0", SEND, assemblyPrint->result->op, assemblyPrint->op1->op);
+      break;
+    case receiveAO:
+      fprintf(codefile, "6'd%d, 5'd%d, 21'd0", RECEIVE, assemblyPrint->result->op);
       break;
     default:
       fprintf(listing, "Error");

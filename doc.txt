@@ -8,9 +8,9 @@ Arquivo ".sato": código-objeto.
   2) code.c     --> criar função para a instrução
                 --> systemCallOrIO()
                 --> paramSystemCallOrIO()
-                --> checkNameFunction()
-                --> print_assembly_operation()
-                --> print_instruction()
+                --> checkNameFunction() OK
+                --> print_assembly_operation() ok
+                --> print_instruction() ok
   3) code.h     --> Funtions    --> typedef enum
                 --> FunctionMap --> functionName []
   4) cgen.h     --> AssemblyOperation --> typedef enum
@@ -88,6 +88,7 @@ Arquivo ".sato": código-objeto.
     2) output(a);
       A variável "a" é apresentada no display LCD.
     3) delay();
+    -----------------------------------------------
     INSTRUÇÕES COM O HD:
       * sector: 4 bits (0 a 15).
       * track: 10 bits (0 a 1023).
@@ -118,3 +119,15 @@ Arquivo ".sato": código-objeto.
       Guarda o último endereço do processo para continuar sua execução.
     15) returnMain();
       Executa a main.
+    REDES:
+    -----------------------------------------------
+    ------------------ Cabeçalho ------------------
+    -----------------------------------------------
+    |  token  | end origem | end destino |  dado  |
+    -----------------------------------------------
+    | 2 bits  |   2 bits   |   2 bits    | 8 bits |
+    -----------------------------------------------
+    16) value = receive();
+      Receber valor.
+    17) send(end_dest, value);
+      Enviar valor.

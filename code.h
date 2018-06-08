@@ -42,11 +42,13 @@
 #define SET_NUMPROG 23
 #define EXEC_PROCESS 24
 #define GET_PCPROCESS 25
+#define SEND 26
+#define RECEIVE 27
 
 typedef enum {OTHER, MAIN, INPUT, OUTPUT, DELAY, HD_TRANSF_MI, HD_WRITE,
               HD_READ, SAVE_RF, RECOVERY_RF, SET_MULTIPROG, SET_QUANTUM,
               SET_ADDR_CS, SET_NUM_PROG, EXEC_PROC, GET_PC_PROCESS,
-              RETURN_MAIN} Functions;
+              RETURN_MAIN, SEND_DATA, RECEIVE_DATA} Functions;
 typedef enum {PARAM1, PARAM2, PARAM3} POS_Key;
 //typedef enum {POS_MI, SECTOR, TRACK} POS_Key;
 
@@ -80,7 +82,9 @@ static functionMap functionName[]= {
   {"setNumProg", SET_NUM_PROG},
   {"execProcess", EXEC_PROC},
   {"getPC_Process", GET_PC_PROCESS},
-  {"returnMain", RETURN_MAIN}
+  {"returnMain", RETURN_MAIN},
+  {"send", SEND_DATA},
+  {"receive", RECEIVE_DATA}
 };
 
 static int NKEYS = (sizeof(functionName)/sizeof(functionMap));
