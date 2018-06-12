@@ -221,12 +221,17 @@ static void executeProc_instruction(AddressQuadElement instruction){
   addAssemblyElement(instruction, createElement(exec_procAO, regOperating(params_function->param1), regOperating(params_function->param2), regOperating(params_function->param3)));
 }
 
+/*
 static void send_instruction(AddressQuadElement instruction){
   addAssemblyElement(instruction, createElement(sendAO, immediateOperating(SOURCE_DATA), regOperating(params_function->param1), regOperating(params_function->param2)));
-};
+}*/
 
-static void receive_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(receiveAO, regOperating(params_function->param1), NULL, NULL));
+static void send_instruction(AddressQuadElement instruction){
+  addAssemblyElement(instruction, createElement(sendAO, regOperating(params_function->param1), regOperating(params_function->param2), NULL));
+}
+
+static void receive_instruction(AddressQuadElement instruction, int regPos){
+  addAssemblyElement(instruction, createElement(receiveAO, regOperating(regPos), NULL, NULL));
 }
 
 static void fillParameters(Operating paramOutput, AddressQuadElement element){
@@ -499,11 +504,11 @@ static void paramSystemCallOrIO(BucketList functionCall, AddressQuadElement elem
     case SET_QUANTUM:
     case SET_ADDR_CS:
     case SET_NUM_PROG:
-    case RECEIVE_DATA:
       params_function->param1 = useRegisterS();
       assignReg(element, params_function->param1, paramOutput->op);
       break;
-    /*case GET_PC_PROCESS:
+    /*case RECEIVE_DATA:
+    case GET_PC_PROCESS:
     case RETURN_MAIN:
       break;*/
     default:
@@ -568,7 +573,7 @@ static void systemCallOrIO(AddressQuad code, AddressQuadElement element){
       send_instruction(element);
       break;
     case RECEIVE_DATA:
-      receive_instruction(element);
+      receive_instruction(element, registerTBR + element->result->addr.nTemp);
       break;
     default: //Função criado pelo usuário
       storeI(element, memoryInstruction+3, element->addr1->addr.bPointer->memloc);
@@ -868,7 +873,7 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", GET_PCPROCESS, assemblyPrint->result->op);
       break;
     case sendAO:
-      fprintf(codefile, "6'd%d, 5'%d, 5'd%d, 5'd%d, 18'd0", SEND, assemblyPrint->result->op, assemblyPrint->op1->op, assemblyPrint->op2->op);
+      fprintf(codefile, "6'd%d, 5'%d, 5'd%d, 16'd0", SEND, assemblyPrint->result->op, assemblyPrint->op1->op);
       break;
     case receiveAO:
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", RECEIVE, assemblyPrint->result->op);
