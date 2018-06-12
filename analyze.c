@@ -278,6 +278,7 @@ static void checkNode(TreeNode * t)
     }
 }
 
+
 /* Procedure typeCheck performs type checking
  * by a postorder syntax tree traversal
  */

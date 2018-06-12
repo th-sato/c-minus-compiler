@@ -44,6 +44,8 @@
 #define GET_PCPROCESS 25
 #define SEND 26
 #define RECEIVE 27
+//Endereço de origem
+#define SOURCE_DATA 3
 
 typedef enum {OTHER, MAIN, INPUT, OUTPUT, DELAY, HD_TRANSF_MI, HD_WRITE,
               HD_READ, SAVE_RF, RECOVERY_RF, SET_MULTIPROG, SET_QUANTUM,
@@ -63,7 +65,6 @@ typedef struct {
   int param3; //MI or Data
   POS_Key key;
 } *Param_Funct;
-
 
 //Mapeamento das funções
 static functionMap functionName[]= {

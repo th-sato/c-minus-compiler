@@ -5,8 +5,8 @@ Arquivo ".cm": código em cminus.
 Arquivo ".sato": código-objeto.
 --> Para adicionar funções no compilador, altere os seguintes arquivos:
   1) analyze.c  --> insertionOfProcessorFunctions() OK
-  2) code.c     --> criar função para a instrução
-                --> systemCallOrIO()
+  2) code.c     --> criar função para a instrução OK
+                --> systemCallOrIO() OK
                 --> paramSystemCallOrIO()
                 --> checkNameFunction() OK
                 --> print_assembly_operation() ok

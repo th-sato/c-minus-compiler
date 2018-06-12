@@ -19,6 +19,7 @@
 
 void main(void){
   int CS[100];
-  int exec;
-  execProcess(CS[exec], CS[exec+3], CS[exec+4]);
+  int exec; int exec2;
+  send(exec, exec2);
+  exec = receive();
 }
