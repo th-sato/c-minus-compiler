@@ -873,7 +873,7 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", GET_PCPROCESS, assemblyPrint->result->op);
       break;
     case sendAO:
-      fprintf(codefile, "6'd%d, 5'%d, 5'd%d, 16'd0", SEND, assemblyPrint->result->op, assemblyPrint->op1->op);
+      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 16'd0", SEND, assemblyPrint->result->op, assemblyPrint->op1->op);
       break;
     case receiveAO:
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", RECEIVE, assemblyPrint->result->op);
