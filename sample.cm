@@ -18,9 +18,11 @@
 */
 
 void main(void){
-  int CS[100];
-  int exec; int exec2;
-  send(exec, exec2);
-  exec = receive();
-  send(exec, exec2);
+  int dest; int value;
+  dest = input();
+  output(dest);
+  value = input();
+  output(value);
+  send(dest, value);
+  output(receive()+3);
 }

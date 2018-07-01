@@ -227,21 +227,27 @@ static void send_instruction(AddressQuadElement instruction){
 }*/
 
 static void send_instruction(AddressQuadElement instruction){
-  addAssemblyElement(instruction, createElement(sendAO, regOperating(params_function->param1), regOperating(params_function->param2), NULL));
+  addAssemblyElement(instruction, createElement(sendAO, NULL, NULL, NULL));
 }
 
 static void receive_instruction(AddressQuadElement instruction, int regPos){
   addAssemblyElement(instruction, createElement(receiveAO, regOperating(regPos), NULL, NULL));
 }
 
-static void fillParameters(Operating paramOutput, AddressQuadElement element){
+static void fillParameters(Operating paramOutput, AddressQuadElement element, int choose){
   switch (params_function->key) {
     case PARAM1: //MI or Data
-      params_function->param1 = useRegisterS();
+      if(choose == 0)
+        params_function->param1 = useRegisterS();
+      else
+        params_function->param1 = registerSendDest;
       assignReg(element, params_function->param1, paramOutput->op);
       break;
     case PARAM2: //SECTOR
-      params_function->param2 = useRegisterS();
+      if(choose == 0)
+        params_function->param2 = useRegisterS();
+      else
+        params_function->param2 = registerSendData;
       assignReg(element, params_function->param2, paramOutput->op);
       break;
     case PARAM3: //TRACK
@@ -497,8 +503,10 @@ static void paramSystemCallOrIO(BucketList functionCall, AddressQuadElement elem
     case SAVE_RF:
     case RECOVERY_RF:
     case EXEC_PROC:
+      fillParameters(paramOutput, element, 0);
+      break;
     case SEND_DATA:
-      fillParameters(paramOutput, element);
+      fillParameters(paramOutput, element, 1);
       break;
     case SET_MULTIPROG:
     case SET_QUANTUM:
@@ -573,7 +581,8 @@ static void systemCallOrIO(AddressQuad code, AddressQuadElement element){
       send_instruction(element);
       break;
     case RECEIVE_DATA:
-      receive_instruction(element, registerTBR + element->result->addr.nTemp);
+      receive_instruction(element, registerReceive);
+      assignReg(element, registerTBR + element->result->addr.nTemp, registerReceive);
       break;
     default: //Função criado pelo usuário
       storeI(element, memoryInstruction+3, element->addr1->addr.bPointer->memloc);
@@ -873,7 +882,7 @@ void print_instruction(Assembly assemblyPrint, FILE * codefile){
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", GET_PCPROCESS, assemblyPrint->result->op);
       break;
     case sendAO:
-      fprintf(codefile, "6'd%d, 5'd%d, 5'd%d, 16'd0", SEND, assemblyPrint->result->op, assemblyPrint->op1->op);
+      fprintf(codefile, "6'd%d, 26'd0", SEND);
       break;
     case receiveAO:
       fprintf(codefile, "6'd%d, 5'd%d, 21'd0", RECEIVE, assemblyPrint->result->op);

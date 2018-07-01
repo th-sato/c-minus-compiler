@@ -7,6 +7,9 @@
 #include "cgen.h"
 
 #define registerZero 0 //Registrador com valor constante zero
+#define registerSendDest 1 //Registrador para o envio do destino
+#define registerSendData 2 //Registrador para o envio do dado
+#define registerReceive 3 //Registrador para receber o dado
 #define registerOUT 6 //registrador para impressão
 #define registerRV 7 //Registrador para guardar valor de retorno
 #define registerTBR_Prog 8 //Início dos registradores do tipo T
