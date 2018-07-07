@@ -5,5 +5,4 @@ void main(void){
   value = input();
   output(value);
   send(dest, value);
-  output(receive()+3);
 }

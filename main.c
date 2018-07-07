@@ -136,7 +136,8 @@ static void compilerPrograms (int N, FILE * codefile){ //Quantidade de programas
   char file[120];
   char name[20][120] = {"buscaBinaria", "fatorial", "fibonacci", "mdc",
                         "media", "mediana", "mmc", "palindromo",
-                        "potencia", "selectionSort"};
+                        "potencia", "selectionSort", "Redes/send",
+                        "Redes/receive"};
   for(i = 0; i < N; i++){
     fprintf(codefile, "//Algorithm: %s\n\n", name[i]);
     reexecuteCompiler(i+2);
@@ -182,7 +183,7 @@ int main( int argc, char * argv[] )
       //fclose(codefile);
       SO = FALSE;
       //Gerar código do HD
-      compilerPrograms(10, codefile);
+      compilerPrograms(12, codefile);
       FATinHD(codefile);
       //fclose(codefile);
       break;
