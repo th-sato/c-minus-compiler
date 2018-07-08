@@ -1,6 +1,8 @@
 void main(void){
   int v1; int v2;
   v1 = receive();
+  output(v1);
   v2 = receive();
+  output(v2);
   output(v1*v2);
 }
